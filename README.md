@@ -7,7 +7,11 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 
 
 ## Description
-Our team's capstone project focuses on the application of current state-of-the-art (SOTA) computer vision models to 3D MRI volumes of patients diagnosed with Glioblastoma cancer. Glioblastoma (GBM) is a very aggressive form of cancer, and "survival rates and mortality statistics for GMB **have been virtually unchanged** for decades." Five-year survival rates are estimated at 6.8%, with an average 8-month length of survival after diagnosis, 10,000 estimated deaths per year in the US. Notably, 49.1% of primary malignant brain tumors are Gliomas. [Data source: BrainTumor.org](https://braintumor.org/events/glioblastoma-awareness-day/about-glioblastoma/)
+Our team's capstone project focuses on the application of current state-of-the-art (SOTA) computer vision models to 3D MRI volumes of patients diagnosed with Glioblastoma cancer. Glioblastoma (GBM) is a very aggressive form of cancer, and "survival rates and mortality statistics for GMB **have been virtually unchanged** for decades." [Data source: BrainTumor.org](https://braintumor.org/events/glioblastoma-awareness-day/about-glioblastoma/)
+
+[![Glioblastoma Stats](img/general/gbm_stats.png)](https://braintumor.org/events/glioblastoma-awareness-day/about-glioblastoma/)
+
+[![5-year survival rates](img/general/cancer_5_year_survival_rates.png)](https://www.cancer.org/content/dam/cancer-org/research/cancer-facts-and-statistics/annual-cancer-facts-and-figures/2023/2023-cancer-facts-and-figures.pdf)
 
 Our motivations include:
 
