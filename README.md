@@ -58,7 +58,7 @@ This data set includes:
     * survival dates after surgery
     * MGMT (Unmethylated, Indeterminate, Methylated)
     * IDH1
-    * Demmographics
+    * Demographics
 
 ## Data Science Pipeline
 
