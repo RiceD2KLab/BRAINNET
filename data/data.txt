@@ -12,7 +12,7 @@ Note, this data file requires installing and using the IBM-Aspera Connect plugin
 
 Note, this data file requires installing and using the IBM-Aspera Connect plugin data downloader: https://www.ibm.com/aspera/connect/
 
-3. Clinical Data (CSV, 51 kB)
+3. Clinical Data (CSV, 51 kB): https://wiki.cancerimagingarchive.net/download/attachments/70225642/UPENN-GBM_clinical_info_v1.0.csv?api=v2
 
 4. Histopathology to Radiology Filename Mapping (CSV, 2 kB) https://wiki.cancerimagingarchive.net/download/attachments/70225642/radiology_mapping.csv?version=2&amp;modificationDate=1666634570946&amp;api=v2
 
