@@ -1,9 +1,27 @@
 # Rice D2K DSCI 535 Capstone Summer 2023, TeamCV Biomedical Imaging
 
+Deep learning on brain MRI images - towards improved cancer diagnostics and treatment
+
 ## Team Members
-Huafeng Liu, Ben Dowdell, Todd Engelder, Nicholas Oso, Keith Pulmano, Zida Wang
+Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
+
 
 ## Description
+Our team's capstone project focuses on the application of current state-of-the-art (SOTA) computer vision models to 3D MRI volumes of patients diagnosed with Glioblastoma cancer. Glioblastoma (GBM) is a very aggressive form of cancer, and "survival rates and mortality statistics for GMB **have been virtually unchanged** for decades." Five-year survival rates are estimated at 6.8%, with an average 8-month length of survival after diagnosis, 10,000 estimated deaths per year in the US. Notably, 49.1% of primary malignant brain tumors are Gliomas. [Data source: BrainTumor.org](https://braintumor.org/events/glioblastoma-awareness-day/about-glioblastoma/)
+
+Our motivations include:
+
+1. Advance diagnostic, treatment, and medical research
+2. Test novel data science tools on 2D and 3D image data
+3. Support exploration applications in the energy industry (image data idea transfer, such as 3D seismic data)
+
+ Our objectives are to develop machine learning tools focused on:
+
+1. Automated Brain Tumor Segmentation
+2. Biomaker prediction (classification)
+3. Brain Tumor detection (classification / anomaly detection)
+
+## Data
 We are using a data set from the Cancer Imaging Archive for segmentation and classification of brain MRI scans for patients diagnosed to have Glioblastoma-type cancer. The data is hosted [here](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642) and is collected and made available by the University of Pennsylvania Health System.
 
 **Data citation**:
@@ -19,3 +37,29 @@ Bakas, S., Sako, C., Akbari, H., Bilello, M., Sotiras, A., Shukla, G., Rudie, J.
 Clark, K., Vendt, B., Smith, K., Freymann, J., Kirby, J., Koppel, P., Moore, S., Phillips, S., Maffitt, D., Pringle, M., Tarbox, L., & Prior, F. (2013). The Cancer Imaging Archive (TCIA): Maintaining and Operating a Public Information Repository. Journal of Digital Imaging, 26(6), 1045–1057. [https://doi.org/10.1007/s10278-013-9622-7](https://doi.org/10.1007/s10278-013-9622-7)
 
 The data set is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+This data set includes:
+
+1. 3D mpMRI Images
+    * T1, T2, T1-GD, and T2-Flair attribute volumes (~630 patients of 1-5+ GB each, 800,000+ images)
+    * DICOM and NIFTI format
+    * Cancerous and non-cancerous instances
+    * Additional dataset of MRI images from normal, healthy patients (600 images with T1, T2, and PD-weighted attributes)
+2. Brain Tumor annotations
+    * de novo Glioblastoma tumors
+    * 3D volumes for multiple patients
+3. Histopathology slides
+    * RGB images
+4. Clinical data
+    * survival dates after surgery
+    * MGMT (Unmethylated, Indeterminate, Methylated)
+    * IDH1
+    * Demmographics
+
+## Data Science Pipeline
+
+1. 3D Images
+2. Wrangled Images
+3. ML model
+4. Label Predictions
+5. Performance Evaluation
