@@ -1,3 +1,4 @@
 data/
-src/data
 **/__pycache__/
+src/keys/*
+src/temp_files/*
