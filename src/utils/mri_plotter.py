@@ -3,17 +3,17 @@ import numpy as np
 
 class MRIPlotter:
     
-    def plot_struct_img(self, img_data, fig, axs, row, col, title=None, cmap="Greys_r", auto_cbar=True, alpha=None, slice_idx=None):
+    def plot_struct_img(self, img_data, fig, axs, row, col, title=None, cmap="Greys_r", alpha=None, auto_cbar=True, slice_idx=None, **kwargs):
         '''
         Args:
             img_data: loaded 2d or 3d nifti file
             auto_bar: automatically adds the color bar if set to true
-            alpha: custom alpha. make sure that this has the same shape as your image
-            
+            slice_idx: z-index if image is 3d
+            **kwargs: keyword arguments to capture other parameters that can be passed to imshow (e.g. alpha, aspect, etc.)
         Returns: Plotted image
         '''
         display_data = img_data
-        
+           
         # calculate slice index if image is 3d
         if img_data.ndim == 3:
 
@@ -28,7 +28,7 @@ class MRIPlotter:
         if len(fig.axes) > 1:
             axs_element = axs[col] if len(axs.shape) == 1 else axs[row, col]
 
-        img = axs_element.imshow(display_data, aspect='equal', cmap=cmap, alpha=alpha)
+        img = axs_element.imshow(display_data, aspect='equal', cmap=cmap, alpha=alpha, **kwargs)
         
         if title:
             axs_element.set_title(title)
@@ -37,14 +37,15 @@ class MRIPlotter:
             fig.colorbar(img, ax=axs_element, fraction=0.05)
         return img
 
-    def plot_segm_img(self, img_data, fig, axs, row, col, title=None, cmap=None, auto_cbar=False, overlay=False, 
-                      segm_cbar=True, slice_idx=None, alpha=None):
+    def plot_segm_img(self, img_data, fig, axs, row, col,title=None, cmap=None, auto_cbar=False, overlay=False, 
+                      segm_cbar=True, slice_idx=None, alpha=None, **kwargs):
         '''
         Args:
             img_data: loaded 2d or 3d nifti file
             auto_cbar: automatically generate cbar if true
             segm_cbar: show custom cbar with integer tickmarks based on the segments. if auto_cbar is True, this will not apply
             overlay: if true, default cmap and alpha values will be generated (if not provided) to create a segment mask 
+            **kwargs: keyword arguments to capture other parameters that can be passed to imshow (e.g. alpha, aspect, etc.)
         Returns: Plotted image
         '''
         
@@ -74,7 +75,7 @@ class MRIPlotter:
         # re-use plot_struct_img but using cbar=false as default so we can manually build the discrete color bar
         img = self.plot_struct_img(img_data, fig, axs, row, col, title=title,
                                    cmap=label_cmap, auto_cbar=(segm_cbar==False and auto_cbar), 
-                                   alpha=alpha, slice_idx=slice_idx)
+                                   alpha=alpha, slice_idx=slice_idx, **kwargs)
 
         axs_element = axs
         if len(fig.axes) > 1:
