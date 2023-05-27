@@ -18,7 +18,7 @@ SEGMENTS = [0, 1, 2, 4]
 SEGMENT_NAMES = ["OTHERS", "ED", "NCR/NET", "ET"]
 
 STORAGE_BUCKET_NAME = "rice_d2k_biocv"
-STORAGE_AUTH_FILE = os.path.join("keys", "zinc-citron-387817-2cbfd8289ed2.json")
+STORAGE_AUTH_FILE = os.path.join("auth", "zinc-citron-387817-2cbfd8289ed2.json")
 
 class MriImage:
     def __init__(self):
