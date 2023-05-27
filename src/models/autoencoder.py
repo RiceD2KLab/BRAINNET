@@ -18,7 +18,7 @@ class Autoencoder(nn.Module):
         super(Autoencoder, self).__init__()
         assert input_nchannels == 4, "Expected number of input channels is 4"
         self.input_nch = 4
-        
+
         # implement encoder
         # Input 4 channels --> Latent Space 3 channels
         # with same spatial dimensions
@@ -69,7 +69,7 @@ class Autoencoder(nn.Module):
         return decoded
     
 
-def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100):
+def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100, outpath=None):
     """
     Implements a custom training loop for the autoencoder
 
@@ -79,6 +79,7 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         optimizer - an instance of a PyTorch optimizer class
         dataloader - an instance of a Dataloader class for AutoencoderMRIDataset class
         nepochs - number of epochs for training, default 100
+        outpath - string path for saving model
 
     Returns a fitted model
     """
@@ -110,3 +111,7 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         
         # print the status
         print(f"Epoch {epoch + 1}/{nepochs} - Loss: {loss.item()}")
+
+    # save the model
+    if outpath:
+        torch.save(model, outpath)
