@@ -42,7 +42,7 @@ class AutoencoderMRIDataset(Dataset):
     Class to create a custom on-demand data set for use
     in training an autoencoder on the 3D MRI volumes
     """
-    def __init__(self, data_dir, data_list_fn, transform=None):
+    def __init__(self, data_dir, data_list_fn, transforms=None):
         """
         Inputs:
             data_dir - string path to data
@@ -50,7 +50,7 @@ class AutoencoderMRIDataset(Dataset):
         """
         self.data_dir = data_dir
         self.data_list_fn = data_list_fn
-        self.transform=transform
+        self.transforms=transforms
 
         with open(data_list_fn, 'r') as file:
             self.n_data = sum(1 for _ in file)
@@ -99,8 +99,8 @@ class AutoencoderMRIDataset(Dataset):
         sample = {"vol": vol}
 
         # apply any desired transformations
-        if self.transform:
-            sample = self.transform(sample)
+        if self.transforms:
+            sample = self.transforms(sample)
 
         return sample
     
