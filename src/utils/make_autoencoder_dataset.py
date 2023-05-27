@@ -1,7 +1,11 @@
 import os
 import numpy as np
+from torch import from_numpy
 from torch.utils.data import Dataset
 import nibabel as nib
+
+# useful reference: 
+# https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 
 
 def create_ae_data_list(data_dir, outfile_str="data_list.txt"):
@@ -38,7 +42,7 @@ class AutoencoderMRIDataset(Dataset):
     Class to create a custom on-demand data set for use
     in training an autoencoder on the 3D MRI volumes
     """
-    def __init__(self, data_dir, data_list_fn):
+    def __init__(self, data_dir, data_list_fn, transform=None):
         """
         Inputs:
             data_dir - string path to data
@@ -46,6 +50,7 @@ class AutoencoderMRIDataset(Dataset):
         """
         self.data_dir = data_dir
         self.data_list_fn = data_list_fn
+        self.transform=transform
 
         with open(data_list_fn, 'r') as file:
             self.n_data = sum(1 for _ in file)
@@ -80,13 +85,35 @@ class AutoencoderMRIDataset(Dataset):
         n_h = data_cur.shape[0]
         n_w = data_cur.shape[1]
         n_d = data_cur.shape[2]
-        image = np.zeros((n_h, n_w, n_d, 4))
+        vol = np.zeros((n_h, n_w, n_d, 4))
 
         # add data_cur to image
-        image[:, :, :, 0] = data_cur.get_fdata()
+        vol[:, :, :, 0] = data_cur.get_fdata()
 
         # load remaining 3 MRI modes
         for ifile, file in enumerate(list((data_file_1, data_file_2, data_file_3))):
-            image[:, :, :, ifile + 1] = nib.load(os.path.join(self.data_dir, file)).get_fdata()
+            vol[:, :, :, ifile + 1] = nib.load(os.path.join(self.data_dir, file)).get_fdata()
 
-        return image
+        
+        # create a mapping of the sample
+        sample = {"vol": vol}
+
+        # apply any desired transformations
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
+    
+
+class ToTensor:
+    """
+    converts numpy ndarrays to Tensors
+    """
+    def __call__(self, sample):
+        vol = sample['vol']
+
+        # swap channels to be first axis
+        # numpy array format HxWxZxC
+        # PyTorch tensor format CxHxWxZ
+        vol = vol.transpose((3, 0, 1, 2))
+        return {"vol": from_numpy(vol)}
