@@ -115,3 +115,24 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     # save the model
     if outpath:
         torch.save(model, outpath)
+
+
+def normalize_channels(mri_tensor):
+    """
+    Normalize channels to range from 0 to 1
+
+    Inputs:
+        mri_tensor - a 4D torch tensor object in CHWZ format
+
+    Returns a tensor object
+    """
+    num_channels = mri_tensor.size()[0]
+    normalized_mri_tensor = mri_tensor.clone()
+
+    for channel in range(num_channels):
+        chan_min = mri_tensor[channel, :, :, :].min()
+        chan_max = mri_tensor[channel, :, :, :].max()
+        normalized_mri_tensor[channel, :, :, :] = ((normalized_mri_tensor[channel, :, :, :] - chan_min) /
+                                                   (chan_max - chan_min))
+    
+    return normalized_mri_tensor
