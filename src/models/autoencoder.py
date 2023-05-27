@@ -26,65 +26,148 @@ class Autoencoder(nn.Module):
         # as input, but with only 3 feature maps
         # this is what we want in combining information from 
         # the original input four structural scans
+        # self.encoder = nn.Sequential(
+        #     nn.Conv3d(
+        #         in_channels=self.input_nch, 
+        #         out_channels=8,
+        #         kernel_size=5,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=8, 
+        #         out_channels=16,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=16, 
+        #         out_channels=32,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=32, 
+        #         out_channels=64,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=64, 
+        #         out_channels=72,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=72, 
+        #         out_channels=18,
+        #         kernel_size=1,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=18, 
+        #         out_channels=6,
+        #         kernel_size=1,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU(),
+        #     nn.Conv3d(
+        #         in_channels=6, 
+        #         out_channels=3,
+        #         kernel_size=1,
+        #         stride=1,
+        #         padding="same"
+        #     ),
+        #     nn.ReLU()
+        # )
+
+        # # Decoder layers
+        # # Mirrors encoder layer to get output with same shape as input
+        # self.decoder = nn.Sequential(
+        #     nn.ConvTranspose3d(
+        #         in_channels=3, 
+        #         out_channels=6,
+        #         kernel_size=1,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=6, 
+        #         out_channels=18,
+        #         kernel_size=1,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=18, 
+        #         out_channels=72,
+        #         kernel_size=1,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=72, 
+        #         out_channels=64,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=64, 
+        #         out_channels=32,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=32, 
+        #         out_channels=16,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=16, 
+        #         out_channels=8,
+        #         kernel_size=3,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.ReLU(),
+        #     nn.ConvTranspose3d(
+        #         in_channels=8, 
+        #         out_channels=self.input_nch,
+        #         kernel_size=5,
+        #         stride=1,
+        #         padding=1
+        #     ),
+        #     nn.Sigmoid()
+        # )
+
+        # implement encoder
+        # Input 4 channels --> Latent Space 3 channels
+        # with same spatial dimensions
         self.encoder = nn.Sequential(
             nn.Conv3d(
-                in_channels=self.input_nch, 
-                out_channels=8,
-                kernel_size=5,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=8, 
-                out_channels=16,
-                kernel_size=3,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=16, 
-                out_channels=32,
-                kernel_size=3,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=32, 
-                out_channels=64,
-                kernel_size=3,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=64, 
-                out_channels=72,
-                kernel_size=3,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=72, 
-                out_channels=18,
-                kernel_size=1,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=18, 
-                out_channels=6,
-                kernel_size=1,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU(),
-            nn.Conv3d(
-                in_channels=6, 
+                in_channels=self.input_nch,
                 out_channels=3,
                 kernel_size=1,
                 stride=1,
@@ -93,71 +176,16 @@ class Autoencoder(nn.Module):
             nn.ReLU()
         )
 
-        # Decoder layers
-        # Mirrors encoder layer to get output with same shape as input
+        # implement decoder
+        # Latent Space 3 channels --> Output 4 channels
+        # with same spatial dimensions as input
         self.decoder = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=3, 
-                out_channels=6,
-                kernel_size=1,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=6, 
-                out_channels=18,
-                kernel_size=1,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=18, 
-                out_channels=72,
-                kernel_size=1,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=72, 
-                out_channels=64,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=64, 
-                out_channels=32,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=32, 
-                out_channels=16,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=16, 
-                out_channels=8,
-                kernel_size=3,
-                stride=1,
-                padding=1
-            ),
-            nn.ReLU(),
-            nn.ConvTranspose3d(
-                in_channels=8, 
+                in_channels=3,
                 out_channels=self.input_nch,
-                kernel_size=5,
+                kernel_size=1,
                 stride=1,
-                padding=1
+                padding=0
             ),
             nn.Sigmoid()
         )
@@ -224,4 +252,4 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
             optimizer.step()
         
         # print the status
-        print(f"Epoch {epoch + 1}/{nepochs} - Loss: {loss.items()}")
+        print(f"Epoch {epoch + 1}/{nepochs} - Loss: {loss.item()}")
