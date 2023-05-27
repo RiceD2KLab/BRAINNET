@@ -86,7 +86,7 @@ class AutoencoderMRIDataset(Dataset):
         image[:, :, :, 0] = data_cur.get_fdata()
 
         # load remaining 3 MRI modes
-        for ifile, file in enumerate(list(data_file_1, data_file_2, data_file_3)):
+        for ifile, file in enumerate(list((data_file_1, data_file_2, data_file_3))):
             image[:, :, : ifile + 1] = nib.load(os.path.join(self.data_dir, file)).get_fdata()
 
         return image
