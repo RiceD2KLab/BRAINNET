@@ -64,10 +64,10 @@ class AutoencoderMRIDataset(Dataset):
             for line_number, line_content in enumerate(curr_file):
                 # load the first line as default
                 if line_number == 0:
-                    subj_no = line_content.split('.')[0].split('_')[0]
+                    subj_no = line_content.split('.')[0].split('_')[0].strip()
                 # set numbers according to index
                 if line_number == idx:
-                    subj_no = line_content.split('.')[0].split('_')[0]
+                    subj_no = line_content.split('.')[0].split('_')[0].strip()
 
         # set data file names corresponding to 4 3D MRI modes
         data_file_0 = subj_no + '_11_T1' + '.nii.gz'
