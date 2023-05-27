@@ -24,16 +24,36 @@ class MriImage:
     def __init__(self):
         '''
             Description: Initializes class for handling MRI images
+            
+            Example Usage:
+            mri_img = MriImage()
+
+            To download auto-segmented version of UPENN-GBM-00312_1:
+            file_name, auto_segm_img = mri_img.read("UPENN-GBM-00312_1", auto_segm=True)
+            
+            To download FLAIR version of UPENN-GBM-00312_1:
+            file_name, flair_img = mri_img.read("UPENN-GBM-00312_1", struct_scan='FLAIR')
+            
+            To get all struct files:
+            mri_img.list_files(self, struct_scan="T1", segm=False, auto_segm=False, reduced=False):
+
         '''
         os.makedirs(TEMP_DIR, exist_ok=True)
         
-        # authenticate client. key file should not be uploaded to git
-        # TODO: ask me for the .json file and save this under src/auth folder
+        # authenticate storage client
         self.storage_client = storage.Client.from_service_account_json(STORAGE_AUTH_FILE)
         
-    # download from google cloud
     def read(self, subj_file, struct_scan=None, segm=False, auto_segm=False, reduced=False, return_arr=True, 
         dtype = None):
+        '''
+            Description: Download file from google storage
+            Args:
+                struct_scan: specify type of scan to be loaded: T1, T2, T1GD, FLAIR
+                segm: If true, load the manually annotated image. if struct_scan is not None, this will be overriden 
+                    and the structural image will be loaded instead
+                auto_segm: If true, load the auto-labeled segmented image
+                reduced: If true, load the reduced version of the specified image type. This parameter can be true for any image
+        '''
         f_name, blob_name = self._get_img_path(subj_file, struct_scan=struct_scan, segm=segm, auto_segm=auto_segm, 
                                                reduced=reduced)
         # get bucket instance
@@ -73,7 +93,17 @@ class MriImage:
         return f_name, data
     
     def list_blobs_in_folder(self, struct_scan=None, segm=False, auto_segm=False, reduced=False):
-        """List the blobs (files) in a folder within a Google Cloud Storage bucket"""
+        '''
+            Description: List the blobs (files) in a folder within a Google Cloud Storage bucket
+            Args:
+                struct_scan: filter list by type of scan
+                segm: If true, load the manually annotated image. if struct_scan is not None, this will be overriden 
+                    and the structural image will be loaded instead
+                auto_segm: If true, load the auto-labeled segmented image
+                reduced: If true, load the reduced version of the specified image type. This parameter can be true for any image
+                    
+            Returns: file name and file path
+        '''
         
         # Prefix the folder name with a slash to list blobs within the folder
         bucket = storage.Bucket(self.storage_client, STORAGE_BUCKET_NAME)
@@ -81,6 +111,13 @@ class MriImage:
         folder_prefix = self._get_folder_path(struct_scan, segm, auto_segm, reduced) + '/'
         all_blobs = self.storage_client.list_blobs(bucket, prefix=folder_prefix)
         all_blob_names = [os.path.basename(blob.name) for blob in all_blobs]
+        
+        if ".DS_Store" in all_blob_names:
+            all_blob_names.remove(".DS_Store")
+        
+        if struct_scan is not None:
+            all_blob_names = list(filter(lambda item: struct_scan in item, all_blob_names))
+            
         all_blob_names.sort()
         return all_blob_names
 
