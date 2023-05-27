@@ -101,7 +101,7 @@ class Autoencoder(nn.Module):
                 out_channels=6,
                 kernel_size=1,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -109,7 +109,7 @@ class Autoencoder(nn.Module):
                 out_channels=18,
                 kernel_size=1,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -117,7 +117,7 @@ class Autoencoder(nn.Module):
                 out_channels=72,
                 kernel_size=1,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -125,7 +125,7 @@ class Autoencoder(nn.Module):
                 out_channels=64,
                 kernel_size=3,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -133,7 +133,7 @@ class Autoencoder(nn.Module):
                 out_channels=32,
                 kernel_size=3,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -141,7 +141,7 @@ class Autoencoder(nn.Module):
                 out_channels=16,
                 kernel_size=3,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -149,7 +149,7 @@ class Autoencoder(nn.Module):
                 out_channels=8,
                 kernel_size=3,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.ReLU(),
             nn.ConvTranspose3d(
@@ -157,7 +157,7 @@ class Autoencoder(nn.Module):
                 out_channels=self.input_nch,
                 kernel_size=5,
                 stride=1,
-                padding="same"
+                padding=1
             ),
             nn.Sigmoid()
         )
@@ -208,16 +208,16 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     for epoch in range(nepochs):
         for batch in dataloader:
             # move batch to device
-            batch = batch.to(device)
+            batch_current = batch["vol"].to(device, dtype=torch.float)
 
             # zero the gradients
             optimizer.zero_grad()
 
             # Forward pass
-            outputs = model(batch)
+            outputs = model(batch_current)
 
             # compute the loss
-            loss = loss_fn(outputs, batch)
+            loss = loss_fn(outputs, batch_current)
 
             # backward pass and optimization
             loss.backward()
