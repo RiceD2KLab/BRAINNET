@@ -1,4 +1,5 @@
 data/
 **/__pycache__/
-src/keys/*
+src/auth/zinc-citron-387817-2cbfd8289ed2.json
+!src/auth/readme.txt
 src/temp_files/*

@@ -24,14 +24,11 @@ class MriImage:
     def __init__(self):
         '''
             Description: Initializes class for handling MRI images
-            Args:
-                working_dir: google drive directory of the code
-                             e.g. '/content/drive/My Drive/Capstone Project/BioCV_Su23/src'
         '''
         os.makedirs(TEMP_DIR, exist_ok=True)
         
         # authenticate client. key file should not be uploaded to git
-        # will just send the .json file via discord if needed
+        # TODO: ask me for the .json file and save this under src/auth folder
         self.storage_client = storage.Client.from_service_account_json(STORAGE_AUTH_FILE)
         
     # download from google cloud
