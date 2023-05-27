@@ -72,8 +72,8 @@ class AutoencoderMRIDataset(Dataset):
         # set data file names corresponding to 4 3D MRI modes
         data_file_0 = subj_no + '_11_T1' + '.nii.gz'
         data_file_1 = subj_no + '_11_T1GD' + '.nii.gz'
-        data_file_2 = subj_no + '_11_T2' + 'nii.gz'
-        data_file_3 = subj_no + '_11_FLAIR' + 'nii.gz'
+        data_file_2 = subj_no + '_11_T2' + '.nii.gz'
+        data_file_3 = subj_no + '_11_FLAIR' + '.nii.gz'
 
         # load data file to image
         data_cur = nib.load(os.path.join(self.data_dir, data_file_0))
