@@ -6,6 +6,7 @@ import nibabel as nib
 
 # useful reference: 
 # https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
+# https://blog.paperspace.com/dataloaders-abstractions-pytorch/
 
 
 def create_ae_data_list(data_dir, outfile_str="data_list.txt"):
