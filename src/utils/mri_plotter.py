@@ -1,25 +1,29 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+SEGMENTS = [0, 1, 2, 4]
+SEGMENT_NAMES = ["ELSE", "NCR/NET", "ED", "ELSE", "ET"]
+
 class MRIPlotter:
     
-    def plot_struct_img(self, img_data, fig, axs, row, col, title=None, cmap="Greys_r", alpha=None, auto_cbar=True, slice_idx=None, **kwargs):
+    def plot_img(self, img_data, fig, axs, row, col, title=None, cmap=None, alpha=None, auto_cbar=True, slice_idx=None, **kwargs):
         '''
         Args:
             img_data: loaded 2d or 3d nifti file
             auto_bar: automatically adds the color bar if set to true
             slice_idx: z-index if image is 3d
             **kwargs: keyword arguments to capture other parameters that can be passed to imshow (e.g. alpha, aspect, etc.)
-        Returns: Plotted image
+        Returns: Generic image
         '''
         display_data = img_data
            
         # calculate slice index if image is 3d
         if img_data.ndim == 3:
 
-            # if slice is not given, find the slice with the largest tumor
+            # if slice is not given, take middle slice
             if slice_idx is None:
-                slice_idx = self.get_largest_tumor_slice_idx(img_data)[0]
+                z_idx = img_data.shape[2]
+                slice_idx = z_idx/2
             
             display_data = img_data[:, :, slice_idx]
 
@@ -37,6 +41,20 @@ class MRIPlotter:
             fig.colorbar(img, ax=axs_element, fraction=0.05)
         return img
 
+    def plot_struct_img(self, img_data, fig, axs, row, col, title=None, cmap="Greys_r", alpha=None, auto_cbar=True, slice_idx=None, **kwargs):
+        '''
+        Args:
+            img_data: loaded 2d or 3d nifti file
+            auto_bar: automatically adds the color bar if set to true
+            slice_idx: z-index if image is 3d
+            **kwargs: keyword arguments to capture other parameters that can be passed to imshow (e.g. alpha, aspect, etc.)
+        Returns: Structural image
+        '''
+        return self.plot_img(img_data, fig, axs, row, col, title=title, 
+                            cmap=cmap, alpha=alpha, auto_cbar=auto_cbar, 
+                            slice_idx=slice_idx, **kwargs)
+
+
     def plot_segm_img(self, img_data, fig, axs, row, col,title=None, cmap=None, auto_cbar=False, overlay=False, 
                       segm_cbar=True, slice_idx=None, alpha=None, **kwargs):
         '''
@@ -46,7 +64,7 @@ class MRIPlotter:
             segm_cbar: show custom cbar with integer tickmarks based on the segments. if auto_cbar is True, this will not apply
             overlay: if true, default cmap and alpha values will be generated (if not provided) to create a segment mask 
             **kwargs: keyword arguments to capture other parameters that can be passed to imshow (e.g. alpha, aspect, etc.)
-        Returns: Plotted image
+        Returns: Segmented image
         '''
         
         if overlay is True and cmap is None:
@@ -61,8 +79,9 @@ class MRIPlotter:
         
         # display 3d as 2d
         if img_data.ndim == 3:
-            if slice_idx is None:  
-                slice_idx = self.get_largest_tumor_slice_idx(img_data)[0]
+            if slice_idx is None:
+                z_idx = img_data.shape[2]
+                slice_idx = z_idx/2
             display_data = img_data[:, :, slice_idx]
             
             if overlay is True and alpha is not None:
@@ -73,7 +92,7 @@ class MRIPlotter:
         label_cmap = plt.get_cmap(cmap, len(label_names))
 
         # re-use plot_struct_img but using cbar=false as default so we can manually build the discrete color bar
-        img = self.plot_struct_img(img_data, fig, axs, row, col, title=title,
+        img = self.plot_img(img_data, fig, axs, row, col, title=title,
                                    cmap=label_cmap, auto_cbar=(segm_cbar==False and auto_cbar), 
                                    alpha=alpha, slice_idx=slice_idx, **kwargs)
 
@@ -89,13 +108,6 @@ class MRIPlotter:
             cbar = fig.colorbar(img, ax=axs_element, fraction=0.05)
             ticks = np.linspace(np.min(label_names), np.max(label_names)-1, len(label_names))
             cbar.set_ticks(ticks + 0.5)
-            cbar.set_ticklabels(label_names)
             
-
-    def get_largest_tumor_slice_idx(self, img_data):
-        nonzero_counts = np.sum(np.count_nonzero(img_data, axis=0), axis=0 )
-        slice_idx = np.argmax(nonzero_counts)
-        return slice_idx, nonzero_counts[slice_idx]
-    
-    def test(self):
-        print("test")
+            # convert numerical labels to the actual names
+            cbar.set_ticklabels(np.array(SEGMENT_NAMES)[label_names])

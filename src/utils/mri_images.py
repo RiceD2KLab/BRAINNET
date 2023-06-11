@@ -3,6 +3,7 @@ import nibabel as nib
 import os
 from google.cloud import storage
 import time
+import numpy as np
 
 DATA_DIR = "data"
 TEMP_DIR = "temp_files"
@@ -15,7 +16,7 @@ IMG_AUTO_SEGM_REDUCED_DIR = os.path.join(DATA_DIR, "automated_segm_reduced")
 
 STRUCT_SCANS = ["T1", "T2", "T1GD", "FLAIR"]
 SEGMENTS = [0, 1, 2, 4]
-SEGMENT_NAMES = ["OTHERS", "ED", "NCR/NET", "ET"]
+SEGMENT_NAMES = ["ELSE", "NCR/NET", "ED", "ET"]
 
 STORAGE_BUCKET_NAME = "rice_d2k_biocv"
 STORAGE_AUTH_FILE = os.path.join("auth", "zinc-citron-387817-2cbfd8289ed2.json")
@@ -176,3 +177,12 @@ class MriImage:
 
         if reduced:
             return IMG_AUTO_SEGM_REDUCED_DIR if auto_segm==True else IMG_REDUCED_DIR 
+        
+    def get_largest_tumor_slice_idx(self, img_data, sum=False):
+        non_zero_x = np.count_nonzero(img_data, axis=0)
+        if sum is True:
+            print("hi")
+            non_zero_x = np.sum(img_data, axis=0)
+        total_y = np.sum(non_zero_x, axis=0 )
+        slice_idx = np.argmax(total_y)
+        return slice_idx, total_y[slice_idx]

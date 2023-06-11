@@ -9,26 +9,27 @@ def calc_binary_metrics(pred_img, true_img, segment):
     '''
     precision: tp / tp + fp => positive predicted value
     recall: tp / tp + fn => ratio of true positives to total positives in the data
-    Specificity = tn / (tn + fp) => ratio of true nagatives to total negatives in the data
+    specificity = tn / (tn + fp) => ratio of true nagatives to total negatives in the data
     '''
     
     true_img_bin = _convert_to_binary(true_img, segment)
     pred_img_bin = _convert_to_binary(pred_img, segment)
 
     recall = mdp.recall(pred_img_bin, true_img_bin)
-    
-    return {
-        "true_positive": np.count_nonzero(pred_img & true_img),
-        "true_negative": np.count_nonzero(~pred_img & ~true_img),
-        "false_positive": np.count_nonzero(pred_img & ~true_img),
-        "false_negative": np.count_nonzero(~pred_img & true_img),
+    specificity = mdp.specificity(pred_img_bin, true_img_bin)
+    metrics_dict = {
+        "true_positive": np.count_nonzero(pred_img_bin & true_img_bin),
+        "true_negative": np.count_nonzero(~pred_img_bin & ~true_img_bin),
+        "false_positive": np.count_nonzero(pred_img_bin & ~true_img_bin),
+        "false_negative": np.count_nonzero(~pred_img_bin & true_img_bin),
         "precision": mdp.precision(pred_img_bin, true_img_bin),
         "recall": recall,
-        "specificity": mdp.specificity(pred_img_bin, true_img_bin),
+        "specificity": specificity,
         "sensitivity": recall,
         "true_positve_rate": recall,
         "true_negative_rate": mdp.true_negative_rate(pred_img_bin, true_img_bin)
     } 
+    return metrics_dict
 
 def calc_dice_score(pred_img, true_img, segment):
     # metric in medical image segmentation to evaluate similarity or overlap between segmented images
