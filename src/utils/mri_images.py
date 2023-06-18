@@ -7,7 +7,7 @@ from typing import Union
 
 import nibabel as nib
 import numpy as np
-from google.cloud import storage as gcs
+from utils.google_storage import GStorageClient
 from onedrivedownloader import download
     
 # All constants from source directories
@@ -38,10 +38,6 @@ IMAGES_TRAIN_2D_CROSS_FNAME = "train_2d_cross"
  
 IMAGES_VAL_2D_CROSS_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EdKtKyMfy2lJvdGGSSz23yEB34_C4MiEm2BmRE9q451Lgg?e=9dK2NO"
 IMAGES_VAL_2D_CROSS_FNAME = "val_2d_cross" 
-
-# Google drive authentication
-STORAGE_BUCKET_NAME = "rice_d2k_biocv"
-STORAGE_AUTH_FILE = os.path.join("auth", "zinc-citron-387817-2cbfd8289ed2.json")
 
 # All constants for destination directories
 DATA_DIR = "content/data"
@@ -93,8 +89,8 @@ class MriImage:
         
         self.enable_gstorage = enable_gstorage
         if self.enable_gstorage:
-            # authenticate storage client if specified. if not, runtime will automatically be used
-            self.storage_client = gcs.Client.from_service_account_json(STORAGE_AUTH_FILE)
+            self.google_client = GStorageClient()
+            
         else:
             # create the directory in the runtime environment
             os.makedirs(DATA_DIR, exist_ok=True)
@@ -122,23 +118,12 @@ class MriImage:
         
         if self.enable_gstorage:    
             # google storage way
-            # Create a temporary file
-            with tempfile.NamedTemporaryFile(suffix=".nii.gz", delete=False) as temp_file:
-                temp_file_path = temp_file.name
-
-            # get bucket instance
-            bucket = self.storage_client.get_bucket(STORAGE_BUCKET_NAME)
-            blob = bucket.blob(mri_file_path)
-            blob.download_to_filename(temp_file_path)
-            
+            temp_file_path = self.google_client.download_blob_as_file(mri_file_path)
             nifti = nib.load(temp_file_path)
 
         else:
             # one drive way
-            # download from onedrive if still missing
             self.download_from_onedrive(mri_type=mri_type)
-        
-            # load file as nifti
             nifti = nib.load(mri_file_path)
 
         # allow functionality to return raw data instead of array data
@@ -172,20 +157,11 @@ class MriImage:
         if self.enable_gstorage:
             # google storage way
             directory = directory.lstrip("/")
-            
-            bucket = gcs.Bucket(self.storage_client, STORAGE_BUCKET_NAME)
-
-            # list all files in the directory
-            all_file_paths = self.storage_client.list_blobs(bucket, prefix=directory)
-            all_file_names = [os.path.basename(file.name) for file in all_file_paths]
-            
-            # probably a mac issue when moving files to google cloud. just delete it from the list of files
-            if ".DS_Store" in all_file_names:
-                all_file_names.remove(".DS_Store")
-
+            all_file_names = self.google_client.list_blob_in_dir(directory)
+    
             # if structural scan is specified, filter list by the scan type 
             if struct_scan is not None:
-                all_file_names = list(filter(lambda item: struct_scan+"_" in item, all_file_names))
+                all_file_names = list(filter(lambda item: struct_scan.value+"_" in item, all_file_names))
                 
         else:
             # download if folder is not in runtime storage yet
@@ -239,7 +215,7 @@ class MriImage:
             elif mri_type == MriType.VAL_2D_CROSS: 
                 download(IMAGES_VAL_2D_CROSS_URL, filename=filename, unzip_path=parent_dir)
             
-    def _get_full_path(self, subj_file: str, mri_type: MriType, struct_scan: Union[StructuralScan, None] = None):
+    def _get_full_path(self, subj_file: str, mri_type: MriType, file_no: int, struct_scan: Union[StructuralScan, None] = None):
         f_name = f"{subj_file}"
         f_dir = self._get_directory(mri_type=mri_type)
         
@@ -265,17 +241,8 @@ class MriImage:
         elif mri_type == MriType.ANNOTATED_REDUCED:
             f_name = f"{f_name}_segm_cut"
             
-        elif mri_type == MriType.TRAIN_2D:
-            pass
-
-        elif mri_type == MriType.VAL_2D:
-            pass
-
-        elif mri_type == MriType.TRAIN_2D_CROSS:
-            pass
-        
-        elif mri_type == MriType.VAL_2D_CROSS: 
-            pass
+        elif mri_type == MriType.TRAIN_2D or mri_type == MriType.VAL_2D or MriType.TRAIN_2D_CROSS or MriType.VAL_2D_CROSS:
+            f_name = f"{subj_file}'_11_{struct_scan}_{file_no}"
                 
         f_name = f"{f_name}.nii.gz"
         f_path = os.path.join(f_dir, f_name)
@@ -331,6 +298,3 @@ class MriImage:
         total_y = np.sum(non_zero_x, axis=0 )
         slice_idx = np.argmax(total_y)
         return slice_idx, total_y[slice_idx]
-    
-    def strip_subj_id(self, mri_file_name):
-        pass
