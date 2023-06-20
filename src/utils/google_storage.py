@@ -16,12 +16,16 @@ class GStorageClient:
         blob = self._get_blob_client(source_path)
         blob.download_to_filename(destination_path)
     
+    def download_blob_as_bytes(self, source_path):
+        blob = self._get_blob_client(source_path)
+        return blob.download_as_bytes()
+        
     def save_from_source_path(self, source_path, destination_path):
         # Upload temp_file_path to blob path
         blob = self._get_blob_client(destination_path)   
         blob.upload_from_filename(source_path)
         
-    def save_from_text(self, destination_path, text):
+    def save_text(self, destination_path, text):
         blob = self._get_blob_client(destination_path)   
         blob.upload_from_string(text)
             

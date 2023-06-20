@@ -77,7 +77,44 @@ class MriType(Enum):
     TRAIN_2D_CROSS = 9
     VAL_2D_CROSS = 10
     
-class DataHandler:        
+class DataHandler:
+    """
+        Handles all functions related to MRI and training data management such as saving, downloading and reading
+        1. Includes reading MRI data functions
+        2. Includes reading and storing generic data
+        
+        
+        Sample Usage:
+        1. Instantiate the class. Set enable_gstorage to False to use runtime instead of google storage. Note that the
+        folder structure is consistent in google storage and in runtime.
+
+            data_handler = DataHandler(enable_gstorage=False)
+    
+    
+        2. Reading MRI images:
+            flair_img = data_handler.load_mri(subj_id=subj_id,
+                                    mri_type=MriType.STRUCT_SCAN,
+                                    struct_scan=StructuralScan.FLAIR)
+            
+            auto_segmented_img = data_handler.load_mri(subj_id=subj_id,
+                                mri_type=MriType.AUTO_SEGMENTED)
+                                
+            annotated_img = data_handler.load_mri(subj_id=subj_id,
+                                mri_type=MriType.ANNOTATED, dtype='uint8')                    
+        
+        3. Save Text:
+            data_handler.save_text(filename="filename.txt", data='this is my text')
+            
+        4. Upload local file to cloud
+            data_handler.save_from_source_path(file_name="destination_filename.txt", source_path="local_file.txt")
+        
+        5. Load Text as list:
+            my_list = data_handler.load_text_as_list(filename="filename.txt")
+            
+        6. Load generic file like torch model
+        
+    """
+                
     def __init__(self, enable_gstorage=True):
         """Initialize MriImage with a parameter.
         Args:
@@ -100,7 +137,7 @@ class DataHandler:
             os.makedirs(self.train_dir, exist_ok=True)
     
     def save_from_source_path(self, file_name, source_path, train_dir_prefix = None, data_dir_prefix = None, upload_to_cloud=False):
-        destination_path = self._get_upload_dir(file_name, train_dir_prefix, data_dir_prefix)
+        destination_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
         
         if self.enable_gstorage:
             self.google_client.save_from_source_path(source_path, destination_path)
@@ -111,18 +148,28 @@ class DataHandler:
 
             # move local temp file to correct directory
             shutil.move(source_path, destination_path)
-            
-        
-    def save_from_text(self, file_name, data, train_dir_prefix = None, data_dir_prefix = None):
-        destination_path = self._get_upload_dir(file_name, train_dir_prefix, data_dir_prefix)
+                 
+    def save_text(self, file_name, data, train_dir_prefix = None, data_dir_prefix = None):
+        destination_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
         
         if self.enable_gstorage:
-            self.google_client.save_from_text(destination_path, data)
+            self.google_client.save_text(destination_path, data)
         else:
             with open(destination_path, 'w') as file:
                 file.write(data)
     
-    def load_text(self, file_name: str, dir_prefix: str = "", absolute_dir: str = None):
+    def load_from_stream(self, file_name, train_dir_prefix = None, data_dir_prefix = None, download_from_cloud=False):
+        # load from training folder by default
+        source_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
+        
+        if self.enable_gstorage or download_from_cloud:
+            file_bytes = self.download_blob_as_bytes(source_path)
+            return BytesIO(file_bytes)
+        else:
+            with open(source_path, 'rb') as f:
+                return BytesIO(f.read())
+        
+    def load_text_as_list(self, file_name: str, dir_prefix: str = "", absolute_dir: str = None):
         # load from training folder by default
         source_path = os.path.join(self.train_dir, dir_prefix, file_name)
         
@@ -136,10 +183,11 @@ class DataHandler:
             
             # download file and save to temp file path created
             self.google_client.download_blob_as_file(source_path, destination_path)
+            # assign temp file as the source path
             source_path = destination_path
-    
-        # read the temp file if from gstorage
-        # if runtime, open the file directly
+
+        # if from google storage, read the temp file
+        # if from runtime, open the specified sourcefile directly
         lines = []
         with open(source_path, 'r') as file:
             for line in file:
@@ -226,7 +274,7 @@ class DataHandler:
         
     def list_mri_in_dir(self, mri_type: MriType, sort: bool=True):
         
-        dir = self._get_directory(mri_type=mri_type)
+        dir = self._get_mri_dir(mri_type=mri_type)
         if self.enable_gstorage == False:
             # attempt to download files in runtime first
             self.download_from_onedrive(mri_type=mri_type)
@@ -248,7 +296,6 @@ class DataHandler:
                         "_" + file_name.strip().split('_')[3]
         return None
     
-    
     def get_mri_file_no(self, file_name):
         # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
         # file_no: 11
@@ -266,7 +313,7 @@ class DataHandler:
     
     def download_from_onedrive(self, mri_type: MriType):
         
-        directory = self._get_directory(mri_type=mri_type)
+        directory = self._get_mri_dir(mri_type=mri_type)
         filename = directory + ".zip"
         
         if not os.path.exists(filename):
@@ -306,10 +353,15 @@ class DataHandler:
             
             elif mri_type == MriType.VAL_2D_CROSS: 
                 download(IMAGES_VAL_2D_CROSS_URL, filename=filename, unzip_path=dir_2d_slices)
-            
+    
+    def create_temp_file(self, file_path):
+        suffix = self._get_blob_extension(file_path)
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
+            return temp_file.name
+                
     def _get_full_path(self, subj_id: str, mri_type: MriType, file_no: int = None, struct_scan: Union[StructuralScan, None] = None):
         file_name = f"{subj_id}"
-        file_dir = self._get_directory(mri_type=mri_type)
+        file_dir = self._get_mri_dir(mri_type=mri_type)
         
         # build file name and supply the file path based on current onedrive folder structure
         # the case of structural images is different since each subject has its own folder
@@ -344,7 +396,7 @@ class DataHandler:
        
         return f_path
 
-    def _get_directory(self, mri_type: MriType):
+    def _get_mri_dir(self, mri_type: MriType):
         dir_2d_slices = os.path.join(self.data_dir, "2D_slices_reduced_norm", "data")
         
         if mri_type == MriType.STRUCT_SCAN:
@@ -377,11 +429,6 @@ class DataHandler:
         
         elif mri_type == MriType.VAL_2D_CROSS:
             return os.path.join(dir_2d_slices, IMAGES_VAL_2D_CROSS_FNAME)
-    
-    def create_temp_file(self, file_path):
-        suffix = self._get_blob_extension(file_path)
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
-            return temp_file.name
         
     def _get_blob_extension(self, file_path):
         suffix = os.path.splitext(file_path)
@@ -390,14 +437,14 @@ class DataHandler:
         else: 
             return suffix[1]
         
-    def _get_upload_dir(self, file_name, train_dir_prefix = None, data_dir_prefix = None):
+    def _get_file_dir(self, file_name, train_dir_prefix = None, data_dir_prefix = None):
         file_path = None
     
         if data_dir_prefix is not None:
             # allow data directory prefix eg. /content/data/myprefix
             file_path = os.path.join(self.data_dir, data_dir_prefix, file_name)
         else:
-            # allow train directory prefix  eg. training/myprefix
+            # default folder is training/myprefix
             if train_dir_prefix is None:
                 train_dir_prefix = ""
             file_path = os.path.join(self.train_dir, train_dir_prefix, file_name)
