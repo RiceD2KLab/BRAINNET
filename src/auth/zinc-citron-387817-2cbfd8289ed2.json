@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "zinc-citron-387817",
+  "private_key_id": "2cbfd8289ed21e3111423c9c0ebc372152c3bc8c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCctltdTTdehGiB\nZVwokBYQkwqArCrdnFNWsa4TuTOCW8OJUPbwUZPX/Z/Kz/MCwGWjCv2WHP0Mxu0T\nVc96C0ky4RYixUzRV/6dYyzZ2gJ4yLUG1+fKwPKSnP8WpCq5cB2c9xYzoyShxr+y\n6PsTLXpvJgl2T6QnbOpOByIONz4N0s+ORufc6ozySXqG50+SMHwSBpMC/Sq5Kgii\n8WxI6BOxhozuxs5FmtLJnOVOBsduakkA12qdjmn4hhlzOJFg8O0ANZ/BHHNALLJQ\nXIJMO/0ka22IFkrn9a557zHhLzpmvx0aQYiTtGS2gl/oSEYqs+0ktcK8qotVMWsY\nq4NsaKJ9AgMBAAECggEAGbnzEkROmmjcuh9Qa4VJ5gMplnmNGO/km4cUN38wFk6n\nsUd2HnoZ7fugK5yLPZClrsgrXKUaIqqWeVXdN2EabWyXpHIk2/oY3bAOCR55yOfU\nFhFEJ1wZBloZI1ekfuhJqD7E6Ym3BgrZZg7Kxvlwj8YcCAzneyRta41OuSw29vA6\nomlFLizFdlIFkAr1AJLbkyNKUvCdaUQQJRrpb7Cr8/O8d0HrsDEl2XbBf+g/OasJ\n6s93/yXZWwtG0mbNVQRjPeC5CrInRmt4wThNnKCAjbyfJmFmKjCi0DuNgLYesHxR\n2gvkwT9c2tNexucM1/bxZNa2cenkto9KE/guWSe+YQKBgQDN1v21A7qkcmEf2WfG\niylNTu8ecZwUYx7f19IuhLGlWeX4VqDxl/orWpj5biG5BRH5RDrqD6MFlqpFHpxV\n+9/Lw6W+bqCJjgpolgR5hfzZH6ST/OKguCf7ZSHanY+SmU0eAI58o+BlS3F6WXKZ\niLH6Ia6+vd/IkpdICKNU95IQHQKBgQDC5p8f6MGCjK+KncgJSpumwh6HeSDJMmfm\nn2XsDzLdSBdCBXT8e6OXeITMt7e5df3QC/UERDs5DguKbqN72kkkXwLw2BqU8Zgb\n0tbKwuyxsR9qef3ASi8+z+h3kKHFBQ8ZIP+dy1YZH7D465WJP/wlkZD7VL90kPp6\nW9pqu2MN4QKBgQCA2iFNa/0tLhCQgGaPCdQb+dqD4ziCJp5QH2kKB7SwvnrQH2J2\ned13wCnckk135a2frU9377vsJqmFxSi2RoqMonehotzJ3umzGJ3KeM6UGFPM89Pm\nKgGVRHSRxmn2qhJ1QoHvkiJJJpXtsgqkA8btvqIF8xQgGWusAwRDjwqXHQKBgAcS\nay+zOGJOTIhRFVMQ+/jfDlCIGqJyS8bYfdBE9OmGliF1JTuMGPGEE/2BpQ77swv7\ngxZ2i1eUpOKPBSuXThQdxnOKw9wnsAdCbTzKOeBwtt0cNBLoHjK/RIYiH1yQxG16\n/wtwt10OA1Pk6HYkdje+wm38Mz49jHkoIBLDXeLBAoGAF5bSoagf7LXsof9dWJ6f\nddcMlDn9duVTFT8X87yTojcIu6N/nsFXcBDhwU9onmEohyiRWb+nakDvADD+YwPT\n/zrSkoGkMjvMfVs9P900tQXnizkwLrzICZLxfp5JLJtqLS4i5CYLsVYL2YPpl8lF\n70E2SREcpCf8ieXQL9g+L+o=\n-----END PRIVATE KEY-----\n",
+  "client_email": "biocv-su23@zinc-citron-387817.iam.gserviceaccount.com",
+  "client_id": "105736567581309099668",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/biocv-su23%40zinc-citron-387817.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
