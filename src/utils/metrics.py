@@ -5,15 +5,18 @@ from scipy.ndimage import distance_transform_edt, binary_erosion, generate_binar
 from scipy.ndimage import _ni_support
 
 # region Commonly used metrics
-def calc_binary_metrics(segm_pred, segm_true, segm_id):
+def calc_binary_metrics(segm_pred, segm_true, segm_id=None):
     '''
     precision: tp / tp + fp => positive predicted value
     recall: tp / tp + fn => ratio of true positives to total positives in the data
     specificity = tn / (tn + fp) => ratio of true nagatives to total negatives in the data
     '''
+    mask_true = segm_true
+    mask_pred = segm_pred
     
-    mask_true = _get_binary_mask(segm_true, segm_id)
-    mask_pred = _get_binary_mask(segm_pred, segm_id)
+    if segm_id is not None:
+        mask_true = _get_binary_mask(segm_true, segm_id)
+        mask_pred = _get_binary_mask(segm_pred, segm_id)
 
     recall = mdp.recall(mask_pred, mask_true)
     specificity = mdp.specificity(mask_pred, mask_true)
@@ -31,11 +34,13 @@ def calc_binary_metrics(segm_pred, segm_true, segm_id):
     } 
     return metrics_dict
 
-def calc_dice_score(segm_pred, segm_true, segm_id):
-    # metric in medical image segm_idation to evaluate similarity or overlap between segm_ided images
-    # convert images to binary
-    mask_true = _get_binary_mask(segm_true, segm_id)
-    mask_pred = _get_binary_mask(segm_pred, segm_id)
+def calc_dice_score(segm_pred, segm_true, segm_id=None):
+    mask_true = segm_true
+    mask_pred = segm_pred
+    
+    if segm_id is not None:
+        mask_true = _get_binary_mask(segm_true, segm_id)
+        mask_pred = _get_binary_mask(segm_pred, segm_id)
 
     # perform element wise multiplication to get intersection
     intersection = np.sum(mask_pred * mask_true)
@@ -51,11 +56,11 @@ def calc_miou(mask_pred, mask_true):
 # endregion
 
 # region Boundary-based metrics
-def calc_hausdorff_95(segm_pred, segm_true, segm_id):
-    return _exec_hausdorff_95(segm_pred, segm_true, segm_id, plot=False)
+def calc_hausdorff_95(segm_pred, segm_true, segm_id=None):
+    return _exec_hausdorff_95(segm_pred, segm_true, segm_id=segm_id, plot=False)
 
-def plot_hausdorff_95(segm_pred, segm_true, segm_id):
-    return _exec_hausdorff_95(segm_pred, segm_true, segm_id, plot=True)
+def plot_hausdorff_95(segm_pred, segm_true, segm_id=None):
+    return _exec_hausdorff_95(segm_pred, segm_true, segm_id=segm_id, plot=True)
 
 def _calc_surface_distances(mask_pred, mask_true, voxelspacing=None, connectivity=1):
   """
@@ -86,25 +91,29 @@ def _calc_surface_distances(mask_pred, mask_true, voxelspacing=None, connectivit
   surface_dist = np.where(segm_pred_border, dist, None)
   return surface_dist
 
-def _exec_hausdorff_95(segm_pred, segm_true, segm_id, plot=False):
-  # convert image to binary
-  mask_true = _get_binary_mask(segm_true, segm_id)
-  mask_pred = _get_binary_mask(segm_pred, segm_id)
+def _exec_hausdorff_95(segm_pred, segm_true, segm_id=None, plot=False):
+    mask_true = segm_true
+    mask_pred = segm_pred
 
-  if np.sum(mask_true) + np.sum(mask_pred) == 0:
-    raise Exception("Images do not have common segment ids")
+    if segm_id is not None:
+        mask_true = _get_binary_mask(segm_true, segm_id)
+        mask_pred = _get_binary_mask(segm_pred, segm_id)
+        
+    if np.sum(mask_true) + np.sum(mask_pred) == 0:
+        print("Both images do not have the segment ids")
+        return None
 
-  connectivity = mask_pred.ndim * 2
-  surface_dist_pred = _calc_surface_distances(mask_pred, mask_true, connectivity=connectivity)
-  surface_dist_true = _calc_surface_distances(mask_true, mask_pred, connectivity=connectivity)
-  surface_dist_pred_no_null = surface_dist_pred[surface_dist_pred != None]
-  surface_dist_true_no_null = surface_dist_true[surface_dist_true != None]
-  hd95_val = np.percentile(np.hstack((surface_dist_pred_no_null, surface_dist_true_no_null)), 95)
-  
-  if plot:
-    return hd95_val, surface_dist_pred, surface_dist_true
-  else:
-    return hd95_val
+    connectivity = mask_pred.ndim * 2
+    surface_dist_pred = _calc_surface_distances(mask_pred, mask_true, connectivity=connectivity)
+    surface_dist_true = _calc_surface_distances(mask_true, mask_pred, connectivity=connectivity)
+    surface_dist_pred_no_null = surface_dist_pred[surface_dist_pred != None]
+    surface_dist_true_no_null = surface_dist_true[surface_dist_true != None]
+    hd95_val = np.percentile(np.hstack((surface_dist_pred_no_null, surface_dist_true_no_null)), 95)
+
+    if plot:
+        return hd95_val, surface_dist_pred, surface_dist_true
+    else:
+        return hd95_val
 
 # endregion
 

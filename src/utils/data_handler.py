@@ -83,7 +83,6 @@ class DataHandler:
         1. Includes reading MRI data functions
         2. Includes reading and storing generic data
         
-        
         Sample Usage:
         1. Instantiate the class. Set enable_gstorage to False to use runtime instead of google storage. Note that the
         folder structure is consistent in google storage and in runtime.
@@ -103,16 +102,24 @@ class DataHandler:
                                 mri_type=MriType.ANNOTATED, dtype='uint8')                    
         
         3. Save Text:
-            data_handler.save_text(filename="filename.txt", data='this is my text')
+            data_handler.save_text(filename='filename.txt', data='this is my text')
             
         4. Upload local file to cloud
             data_handler.save_from_source_path(file_name="destination_filename.txt", source_path="local_file.txt")
         
-        5. Load Text as list:
+        5. Download text as list:
             my_list = data_handler.load_text_as_list(filename="filename.txt")
             
-        6. Load generic file like torch model
+        6. Download file as stream:
+            model_steam = data_handler.load_from_stream("model_current.pt")
+            model = torch.load(model_steam)
         
+        7. List Mri Files
+            annot_files = data_handler.list_mri_in_dir(mri_type=MriType.ANNOTATED)
+            print("No. of segmented files:", len(annot_files))
+            
+            Output: 
+            No. of segmented files: 147
     """
                 
     def __init__(self, enable_gstorage=True):
@@ -136,7 +143,22 @@ class DataHandler:
             # manually create training directory. training dir will be within the repository
             os.makedirs(self.train_dir, exist_ok=True)
     
-    def save_from_source_path(self, file_name, source_path, train_dir_prefix = None, data_dir_prefix = None, upload_to_cloud=False):
+    def save_from_source_path(self, file_name, source_path, train_dir_prefix = None, 
+                              data_dir_prefix = None, upload_to_cloud=False):
+        
+        """
+        Save a file from a source path to a destination directory.
+        Optionally, the file can be uploaded to the cloud even if self.enable_gstorage == False
+
+        Args:
+            file_name (str): The name of the file to be saved.
+            source_path (str): The path from which the file will be fetched.
+            train_dir_prefix (str, optional): Optional prefix for TRAIN_DIR where file will be saved by default.
+            data_dir_prefix (str, optional): If specified, file will be uploaded to DATA_DIR instead of TRAIN_DIR.
+            upload_to_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
+        """
+
+        # build the destination path
         destination_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
         
         if self.enable_gstorage:
@@ -150,6 +172,19 @@ class DataHandler:
             shutil.move(source_path, destination_path)
                  
     def save_text(self, file_name, data, train_dir_prefix = None, data_dir_prefix = None):
+        """
+        Save a file from a source path to a destination directory.
+        Optionally, the file can be uploaded to the cloud even if self.enable_gstorage == False
+
+        Args:
+            file_name (str): The name of the file to be saved.
+            source_path (str): The path from which the file will be fetched.
+            train_dir_prefix (str, optional): Optional prefix for TRAIN_DIR where file will be saved by default.
+            data_dir_prefix (str, optional): If specified, file will be uploaded to DATA_DIR instead of TRAIN_DIR.
+            upload_to_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
+        """
+        
+        # build the destination path
         destination_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
         
         if self.enable_gstorage:
@@ -257,8 +292,10 @@ class DataHandler:
             return data
     
     def list_dir(self, sort: bool=True, dir_prefix: str = "", absolute_dir: str = None):
-        # by default, save inside training folder
+        
+        # Look within the TRAIN DIR by default
         dir = os.path.join(self.train_dir, dir_prefix)
+        
         if absolute_dir is not None:
             dir = absolute_dir
         
@@ -276,7 +313,7 @@ class DataHandler:
         
         dir = self._get_mri_dir(mri_type=mri_type)
         if self.enable_gstorage == False:
-            # attempt to download files in runtime first
+            # attempt to download files to runtime first
             self.download_from_onedrive(mri_type=mri_type)
             
         return self.list_dir(absolute_dir=dir, sort=sort)
@@ -317,8 +354,8 @@ class DataHandler:
         filename = directory + ".zip"
         
         if not os.path.exists(filename):
-            # Note: For some MRI folder structures, unzipping results to another extra subdirectory called /data
-            # specify unzip path parameter to put the files in the same level as the others
+            # Note: For some MRI folder structures, unzipping results to a subdirectory called /data
+            # specify unzip path parameter to control where the files go and bypass extra subdirectories as needed
             # eg: data/images_annot_reduced instead of data/data/images_annot_reduced
             
             # TODO: force unizp path for now to match google storage: /content/data/2D_slices_reduced_norm/data/
