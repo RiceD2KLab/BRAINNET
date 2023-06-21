@@ -1,6 +1,6 @@
 import os
 import tempfile
-import time
+import torch
 from enum import Enum
 from io import BytesIO
 from typing import Union
@@ -49,7 +49,7 @@ IMAGES_VAL_2D_CROSS_FNAME = "val_2d_cross"
 # this will be either in google storage or runtime depending on flag
 DATA_DIR = "content/data"
 
-# this will be either in google storage or local: src/training
+# this will always be in google storage
 TRAIN_DIR = "training"
 
 SEGMENTS = {
@@ -84,10 +84,10 @@ class DataHandler:
         2. Includes reading and storing generic data
         
         Sample Usage:
-        1. Instantiate the class. Set enable_gstorage to False to use runtime instead of google storage. Note that the
+        1. Instantiate the class. Set use_cloud to False to use runtime instead of google storage. Note that the
         folder structure is consistent in google storage and in runtime.
 
-            data_handler = DataHandler(enable_gstorage=False)
+            data_handler = DataHandler(use_cloud=False)
     
     
         2. Reading MRI images:
@@ -122,17 +122,17 @@ class DataHandler:
             No. of segmented files: 147
     """
                 
-    def __init__(self, enable_gstorage=True):
+    def __init__(self, use_cloud=False):
         """Initialize MriImage with a parameter.
         Args:
-            enable_gstorage (int): use runtime storage if set to false
+            use_cloud (int): use runtime storage if set to false
         """
         
         self.google_client = GStorageClient()
-        self.enable_gstorage = enable_gstorage
+        self.use_cloud = use_cloud
         self.train_dir = TRAIN_DIR
         
-        if self.enable_gstorage:
+        if self.use_cloud:
             # google storage needs to see the path as a directory explicity
             self.data_dir = DATA_DIR + "/"
         else:
@@ -140,94 +140,9 @@ class DataHandler:
             self.data_dir = "/" + DATA_DIR
             os.makedirs(self.data_dir, exist_ok=True)
             
-            # manually create training directory. training dir will be within the repository
+            # manually create training directory if files are saved locally
             os.makedirs(self.train_dir, exist_ok=True)
-    
-    def save_from_source_path(self, file_name, source_path, train_dir_prefix = None, 
-                              data_dir_prefix = None, upload_to_cloud=False):
-        
-        """
-        Save a file from a source path to a destination directory.
-        Optionally, the file can be uploaded to the cloud even if self.enable_gstorage == False
 
-        Args:
-            file_name (str): The name of the file to be saved.
-            source_path (str): The path from which the file will be fetched.
-            train_dir_prefix (str, optional): Optional prefix for TRAIN_DIR where file will be saved by default.
-            data_dir_prefix (str, optional): If specified, file will be uploaded to DATA_DIR instead of TRAIN_DIR.
-            upload_to_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
-        """
-
-        # build the destination path
-        destination_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
-        
-        if self.enable_gstorage:
-            self.google_client.save_from_source_path(source_path, destination_path)
-            os.remove(source_path)
-        else:
-            if upload_to_cloud:
-                self.google_client.save_from_source_path(source_path, destination_path)
-
-            # move local temp file to correct directory
-            shutil.move(source_path, destination_path)
-                 
-    def save_text(self, file_name, data, train_dir_prefix = None, data_dir_prefix = None):
-        """
-        Save a file from a source path to a destination directory.
-        Optionally, the file can be uploaded to the cloud even if self.enable_gstorage == False
-
-        Args:
-            file_name (str): The name of the file to be saved.
-            source_path (str): The path from which the file will be fetched.
-            train_dir_prefix (str, optional): Optional prefix for TRAIN_DIR where file will be saved by default.
-            data_dir_prefix (str, optional): If specified, file will be uploaded to DATA_DIR instead of TRAIN_DIR.
-            upload_to_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
-        """
-        
-        # build the destination path
-        destination_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
-        
-        if self.enable_gstorage:
-            self.google_client.save_text(destination_path, data)
-        else:
-            with open(destination_path, 'w') as file:
-                file.write(data)
-    
-    def load_from_stream(self, file_name, train_dir_prefix = None, data_dir_prefix = None, download_from_cloud=False):
-        # load from training folder by default
-        source_path = self._get_file_dir(file_name, train_dir_prefix, data_dir_prefix)
-        
-        if self.enable_gstorage or download_from_cloud:
-            file_bytes = self.download_blob_as_bytes(source_path)
-            return BytesIO(file_bytes)
-        else:
-            with open(source_path, 'rb') as f:
-                return BytesIO(f.read())
-        
-    def load_text_as_list(self, file_name: str, dir_prefix: str = "", absolute_dir: str = None):
-        # load from training folder by default
-        source_path = os.path.join(self.train_dir, dir_prefix, file_name)
-        
-        # allow absolute directory if needed
-        if absolute_dir is not None:
-            source_path = os.path.join(absolute_dir, file_name)
-        
-        if self.enable_gstorage:    
-            # create temp file path with same file format as file being downloaded
-            destination_path = self.create_temp_file(source_path)
-            
-            # download file and save to temp file path created
-            self.google_client.download_blob_as_file(source_path, destination_path)
-            # assign temp file as the source path
-            source_path = destination_path
-
-        # if from google storage, read the temp file
-        # if from runtime, open the specified sourcefile directly
-        lines = []
-        with open(source_path, 'r') as file:
-            for line in file:
-                lines.append(line.strip())
-        return lines
 
     def load_mri(self, subj_id: str, mri_type: MriType, file_no: int = None, struct_scan: Union[StructuralScan, None] = None, 
                  img_dir: str = None, return_nifti: bool = False, dtype: str = None):
@@ -257,7 +172,7 @@ class DataHandler:
             mri_file_path = img_dir
              
       
-        if self.enable_gstorage:    
+        if self.use_cloud:    
             # google storage way
             # create temp file path with same file format as file being downloaded
             destination_path = self.create_temp_file(mri_file_path)
@@ -283,7 +198,7 @@ class DataHandler:
             data = nifti.get_fdata()
         
         # delete temporary file
-        if self.enable_gstorage:
+        if self.use_cloud:
             os.remove(destination_path)
         
         if return_nifti:
@@ -291,6 +206,90 @@ class DataHandler:
         else:
             return data
     
+    def load_from_stream(self, file_name, train_dir_prefix = None, use_cloud=True):
+        # load from training folder by default
+        source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
+        
+        if self.use_cloud or use_cloud:
+            file_bytes = self.download_blob_as_bytes(source_path)
+            return BytesIO(file_bytes)
+        else:
+            with open(source_path, 'rb') as f:
+                return BytesIO(f.read())
+        
+    def load_text_as_list(self, file_name: str, train_dir_prefix = None, use_cloud=True):
+        # load from training folder by default
+        source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
+        
+        if self.use_cloud or use_cloud:    
+            # create temp file path with same file format as file being downloaded
+            destination_path = self.create_temp_file(source_path)
+            
+            # download file and save to temp file path created
+            self.google_client.download_blob_as_file(source_path, destination_path)
+            # assign temp file as the source path
+            source_path = destination_path
+
+        # read the downloaded file
+        lines = []
+        with open(source_path, 'r') as file:
+            for line in file:
+                lines.append(line.strip())
+        return lines
+        
+    def save_torch_model(self, file_name:str, model, train_dir_prefix = None):
+        
+        source_path = self.create_temp_file(file_name)
+        torch.save(model, source_path)
+        
+        self.save_from_source_path(file_name, train_dir_prefix=train_dir_prefix, 
+                                    source_path=source_path, use_cloud=True)
+
+    def save_from_source_path(self, file_name, source_path, train_dir_prefix = None, use_cloud=True):
+        
+        """
+        Save a file from a source path to a destination directory.
+        Optionally, the file can be uploaded to the cloud even if self.use_cloud == False
+
+        Args:
+            file_name (str): The name of the file to be saved.
+            source_path (str): The path from which the file will be fetched.
+            train_dir_prefix (str, optional): Optional prefix for TRAIN_DIR where file will be saved by default.
+            data_dir_prefix (str, optional): If specified, file will be uploaded to DATA_DIR instead of TRAIN_DIR.
+            use_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
+        """
+
+        # build the destination path
+        destination_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
+        
+        if self.use_cloud or use_cloud:
+            self.google_client.save_from_source_path(source_path, destination_path)
+            os.remove(source_path)
+        else:
+            # move local temp file to correct directory
+            shutil.move(source_path, destination_path)
+                 
+    def save_text(self, file_name, data, train_dir_prefix = None, use_cloud=True):
+        """
+        Save a file from a source path to a destination directory.
+        Optionally, the file can be uploaded to the cloud even if self.use_cloud == False
+
+        Args:
+            file_name (str): The name of the file to be saved.
+            source_path (str): The path from which the file will be fetched.
+            train_dir_prefix (str, optional): Optional prefix for TRAIN_DIR where file will be saved by default.
+            use_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
+        """
+        
+        # build the destination path
+        destination_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
+        
+        if self.use_cloud or use_cloud:
+            self.google_client.save_text(destination_path, data)
+        else:
+            with open(destination_path, 'w') as file:
+                file.write(data)
+                
     def list_dir(self, sort: bool=True, dir_prefix: str = "", absolute_dir: str = None):
         
         # Look within the TRAIN DIR by default
@@ -300,7 +299,7 @@ class DataHandler:
             dir = absolute_dir
         
         all_files = []
-        if self.enable_gstorage:
+        if self.use_cloud:
             all_files = self.google_client.list_blob_in_dir(dir)
         else:
             all_files = os.listdir(dir)
@@ -312,7 +311,7 @@ class DataHandler:
     def list_mri_in_dir(self, mri_type: MriType, sort: bool=True):
         
         dir = self._get_mri_dir(mri_type=mri_type)
-        if self.enable_gstorage == False:
+        if self.use_cloud == False:
             # attempt to download files to runtime first
             self.download_from_onedrive(mri_type=mri_type)
             
@@ -474,16 +473,14 @@ class DataHandler:
         else: 
             return suffix[1]
         
-    def _get_file_dir(self, file_name, train_dir_prefix = None, data_dir_prefix = None):
-        file_path = None
-    
-        if data_dir_prefix is not None:
-            # allow data directory prefix eg. /content/data/myprefix
-            file_path = os.path.join(self.data_dir, data_dir_prefix, file_name)
-        else:
-            # default folder is training/myprefix
-            if train_dir_prefix is None:
-                train_dir_prefix = ""
-            file_path = os.path.join(self.train_dir, train_dir_prefix, file_name)
+    def _get_train_dir(self, file_name, train_dir_prefix = None, use_cloud = True):
+        # default folder is training/train_dir_prefix
+        if train_dir_prefix is None:
+            train_dir_prefix = ""
         
-        return file_path
+        train_dir = os.path.join(self.train_dir, train_dir_prefix, file_name)
+        
+        if self.use_cloud == False and use_cloud == False:
+            os.makedirs(train_dir, exist_ok=True)
+
+        return train_dir
