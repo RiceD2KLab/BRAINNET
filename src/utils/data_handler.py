@@ -211,7 +211,7 @@ class DataHandler:
         source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
         
         if self.use_cloud or use_cloud:
-            file_bytes = self.download_blob_as_bytes(source_path)
+            file_bytes = self.google_client.download_blob_as_bytes(source_path)
             return BytesIO(file_bytes)
         else:
             with open(source_path, 'rb') as f:
