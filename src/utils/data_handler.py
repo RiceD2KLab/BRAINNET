@@ -317,6 +317,14 @@ class DataHandler:
             
         return self.list_dir(absolute_dir=dir, sort=sort)
 
+    def dir_exists(self, train_dir_prefix, use_cloud=True):
+        source_path = self._get_train_dir(file_name="", train_dir_prefix=train_dir_prefix)
+        if use_cloud:
+            blobs = self.google_client.list_blob_in_dir(source_path)
+            return len(blobs)> 1
+        else:
+            return os.path.exists(source_path)
+        
     def get_mri_subj_id(self, file_name):
         # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
         # subj_id: 00006

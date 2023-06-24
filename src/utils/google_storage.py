@@ -19,7 +19,7 @@ class GStorageClient:
     def download_blob_as_bytes(self, source_path):
         blob = self._get_blob_client(source_path)
         return blob.download_as_bytes()
-        
+    
     def save_from_source_path(self, source_path, destination_path):
         # Upload temp_file_path to blob path
         blob = self._get_blob_client(destination_path)   
@@ -31,7 +31,8 @@ class GStorageClient:
             
     def list_blob_in_dir(self, prefix):
         bucket = gcs.Bucket(self.storage_client, STORAGE_BUCKET_NAME)
-        prefix = prefix + "/"
+        if not prefix.endswith("/"):
+            prefix += "/"
         
         # list all files in the directory
         blob_paths = self.storage_client.list_blobs(bucket, prefix=prefix)
