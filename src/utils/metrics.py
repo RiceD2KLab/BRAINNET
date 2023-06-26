@@ -43,7 +43,12 @@ def calc_dice_score(segm_pred, segm_true, segm_id=None):
         mask_true = _get_binary_mask(segm_true, segm_id)
         mask_pred = _get_binary_mask(segm_pred, segm_id)
 
-    # perform element wise multiplication to get intersection
+    # test for emptiness
+    if np.sum(mask_true) + np.sum(mask_pred) == 0:
+        msg = "this segment." if segm_id is None else f"segment {segm_id}."
+        print(f"Both images do not have {msg}")
+        return 0
+    
     intersection = np.sum(mask_pred * mask_true)
     dice_score = (2.0 * intersection) / (np.sum(mask_true) + np.sum(mask_pred))
     return dice_score
@@ -70,7 +75,7 @@ def calc_hausdorff_95(segm_pred, segm_true, segm_id=None):
 def plot_hausdorff_95(segm_pred, segm_true, segm_id=None):
     return _exec_hausdorff_95(segm_pred, segm_true, segm_id=segm_id, plot=True)
 
-def _calc_surface_distances(mask_pred, true_pred, voxelspacing=None, connectivity=1):
+def _calc_surface_distances(mask_pred, mask_true, voxelspacing=None, connectivity=1):
     """
     The distances between the surface voxel of binary objects in result and their
     nearest partner surface voxel of a binary object in reference.
@@ -78,7 +83,7 @@ def _calc_surface_distances(mask_pred, true_pred, voxelspacing=None, connectivit
     Source Code: https://github.com/loli/medpy/blob/master/medpy/metric/binary.py#L357
     """
     mask_pred = np.atleast_1d(mask_pred.astype(np.bool))
-    true_pred = np.atleast_1d(true_pred.astype(np.bool))
+    mask_true = np.atleast_1d(mask_true.astype(np.bool))
     if voxelspacing is not None:
         voxelspacing = _ni_support._normalize_sequence(voxelspacing, mask_pred.ndim)
         voxelspacing = np.asarray(voxelspacing, dtype=np.float64)
@@ -93,13 +98,13 @@ def _calc_surface_distances(mask_pred, true_pred, voxelspacing=None, connectivit
     # test for emptiness
     if 0 == np.count_nonzero(mask_pred): 
         raise RuntimeError('The first supplied array does not contain any binary object.')
-    if 0 == np.count_nonzero(true_pred): 
+    if 0 == np.count_nonzero(mask_true): 
         raise RuntimeError('The second supplied array does not contain any binary object.')    
     
     # extract only 1-pixel border line of objects
     # applies binary erosion to the image
     pred_border = mask_pred ^ binary_erosion(mask_pred, structure=footprint, iterations=1)
-    true_border = true_pred ^ binary_erosion(true_pred, structure=footprint, iterations=1)
+    true_border = mask_true ^ binary_erosion(mask_true, structure=footprint, iterations=1)
     
     # calculate surface distance of each pixel 
     dist = distance_transform_edt(~true_border, sampling=voxelspacing)
@@ -120,9 +125,10 @@ def _exec_hausdorff_95(segm_pred, segm_true, segm_id=None, plot=False):
         mask_pred = _get_binary_mask(segm_pred, segm_id)
         
     if np.sum(mask_true) + np.sum(mask_pred) == 0:
-        print("Both images do not have the segment ids")
-        return None
-    
+        msg = "this segment." if segm_id is None else f"segment {segm_id}."
+        print(f"Both images do not have {msg}")
+        return np.inf
+        
     connectivity=1
     if mask_true.ndim == 3:
         connectivity = 26
