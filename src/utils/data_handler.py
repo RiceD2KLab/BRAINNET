@@ -367,6 +367,7 @@ class DataHandler:
             
             # TODO: force unizp path for now to match google storage: /content/data/2D_slices_reduced_norm/data/
             dir_2d_slices = os.path.join(self.data_dir, "2D_slices_reduced_norm")
+            dir_annot_reduced = os.path.dirname(self.data_dir)
             
             if mri_type == MriType.STRUCT_SCAN:
                 download(IMAGES_STRUCTURAL_URL, filename=filename)
@@ -378,13 +379,13 @@ class DataHandler:
                 download(IMAGES_ANNOT_URL, filename=filename)
                 
             elif mri_type == MriType.STRUCT_SCAN_REDUCED:
-                download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=self.data_dir)
+                download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=dir_annot_reduced)
                 
             elif mri_type == MriType.AUTO_SEGMENTED_REDUCED:
                 download(IMAGES_AUTO_SEGM_REDUCED_URL, filename=filename)
                 
             elif mri_type == MriType.ANNOTATED_REDUCED:
-                download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=self.data_dir)
+                download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=dir_annot_reduced)
                 
             elif mri_type == MriType.TRAIN_2D:
                 download(IMAGES_TRAIN_2D_URL, filename=filename, unzip_path=dir_2d_slices)
