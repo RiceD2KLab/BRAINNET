@@ -346,7 +346,14 @@ class DataHandler:
             return file_name.strip().split('_')[0].split('-')[-1]
         return None
     
-    def get_mri_subj_file(self, file_name):
+    def get_mri_subj(self, file_name):
+        # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
+        # result: UPENN-GBM-00006
+        if file_name.strip().split('.')[-1] == 'gz':
+            return file_name.strip().split('_')[0]
+        return None
+        
+    def get_mri_slice_file_name(self, file_name):
         # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
         # result: UPENN-GBM-00006_1.nii.gz
         if file_name.strip().split('.')[-1] == 'gz':
@@ -414,6 +421,9 @@ class DataHandler:
                 download(IMAGES_VAL_2D_CROSS_URL, filename=filename, unzip_path=dir_2d_slices)
     
     def create_temp_file(self, file_path):
+        # this will create a file in the commonly used temporary directory in Python 
+        # /tmp or %USERPROFILE%\AppData\Local\Temp in windows
+        # Lifespan vary depending on os.
         suffix = self._get_blob_extension(file_path)
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
             return temp_file.name
