@@ -206,6 +206,20 @@ class DataHandler:
         else:
             return data
     
+    def load_to_temp_file(self, file_name, train_dir_prefix = None, use_cloud=True):
+        source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
+        
+        if self.use_cloud or use_cloud:   
+            # google storage way
+            # create temp file path with same file format as file being downloaded
+            destination_path = self.create_temp_file(file_name)
+            self.google_client.download_blob_as_file(source_path, destination_path)
+            return destination_path
+        else:
+            # no need to load if from local folder
+            return source_path
+            
+            
     def load_from_stream(self, file_name, train_dir_prefix = None, use_cloud=True):
         # load from training folder by default
         source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
