@@ -1,11 +1,25 @@
-import medpy.metric.binary as mdp
 
+from enum import Enum
+import medpy.metric.binary as mdp
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.ndimage import distance_transform_edt, binary_erosion, generate_binary_structure
 from scipy.ndimage import _ni_support
 
 # region Commonly used metrics
+class MetricName(Enum):
+    PRECISION = "precision"
+    RECALL = "recall"
+    SENSITIVITY = "sensitivity"
+    SPECIFICITY = "specificity"
+    DICE_SCORE = "dice_score"
+    HD95 = "hd95"
+    TRUE_POSITIVE = "true_positive"
+    TRUE_NEGATIVE = "true_negative"
+    FALSE_POSITIVE = "false_positive"
+    FALSE_NEGATIVE = "false_negative"
+    TRUE_POSITIVE_RATE = "true_positive_rate"
+    TRUE_NEGATIVE_RATE = "true_negative_rate"
+    
 def calc_binary_metrics(segm_pred, segm_true, segm_id=None):
     '''
     precision: tp / tp + fp => positive predicted value
@@ -22,22 +36,27 @@ def calc_binary_metrics(segm_pred, segm_true, segm_id=None):
     recall = mdp.recall(mask_pred, mask_true)
     specificity = mdp.specificity(mask_pred, mask_true)
     metrics_dict = {
-        "true_positive": np.count_nonzero(mask_pred & mask_true),
-        "true_negative": np.count_nonzero(~mask_pred & ~mask_true),
-        "false_positive": np.count_nonzero(mask_pred & ~mask_true),
-        "false_negative": np.count_nonzero(~mask_pred & mask_true),
-        "precision": mdp.precision(mask_pred, mask_true),
-        "recall": recall,
-        "specificity": specificity,
-        "sensitivity": recall,
-        "true_positve_rate": recall,
-        "true_negative_rate": mdp.true_negative_rate(mask_pred, mask_true)
+        MetricName.TRUE_POSITIVE.value: np.count_nonzero(mask_pred & mask_true),
+        MetricName.TRUE_NEGATIVE.value: np.count_nonzero(~mask_pred & ~mask_true),
+        MetricName.FALSE_POSITIVE.value: np.count_nonzero(mask_pred & ~mask_true),
+        MetricName.FALSE_NEGATIVE.value: np.count_nonzero(~mask_pred & mask_true),
+        MetricName.PRECISION.value : mdp.precision(mask_pred, mask_true),
+        MetricName.RECALL.value: recall,
+        MetricName.SPECIFICITY.value: specificity,
+        MetricName.SENSITIVITY.value: recall,
+        MetricName.TRUE_POSITIVE_RATE.value: recall,
+        MetricName.TRUE_NEGATIVE_RATE.value: mdp.true_negative_rate(mask_pred, mask_true)
     } 
     return metrics_dict
 
 def calc_dice_score(segm_pred, segm_true, segm_id=None):
     mask_true = segm_true
     mask_pred = segm_pred
+    
+    if mask_true.max() > 1:
+        mask_true = np.clip(mask_true, 0, 1)  
+    if mask_pred.max() > 1:
+        mask_pred = np.clip(mask_pred, 0, 1)  
     
     if segm_id is not None:
         mask_true = _get_binary_mask(segm_true, segm_id)
