@@ -7,9 +7,9 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 
 ## Contents
 
-1. [Description](#description)
 1. [Repository Structure](#repository-structure)
 1. [Python Environment Set-up](#python-environment-set-up)
+1. [Description](#description)
 1. [Data](#data)
 1. [Data Science Pipeline](#data-science-pipeline)
 
@@ -38,6 +38,15 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
     * `visualization/` directory contains python modules for custom visualization functions
 
 
+
+## Python Environment Set-up
+
+1. Required `python --version`: Python 3.10.12
+2. Package requirements: `requirements.txt`
+
+First, ...
+
+
 ## Description
 Our team's capstone project focuses on the application of current state-of-the-art (SOTA) computer vision models to 3D MRI volumes of patients diagnosed with Glioblastoma cancer. Glioblastoma (GBM) is a very aggressive form of cancer, and "survival rates and mortality statistics for GMB **have been virtually unchanged** for decades." [Data source: BrainTumor.org](https://braintumor.org/events/glioblastoma-awareness-day/about-glioblastoma/)
 
@@ -56,13 +65,6 @@ Our motivations include:
 1. Automated Brain Tumor Segmentation
 2. Biomaker prediction (classification)
 3. Brain Tumor detection (classification / anomaly detection)
-
-## Python Environment Set-up
-
-1. Required `python --version`: Python 3.10.12
-2. Package requirements: `requirements.txt`
-
-First, ...
 
 ## Data
 We are using a data set from the Cancer Imaging Archive for segmentation and classification of brain MRI scans for patients diagnosed to have Glioblastoma-type cancer. The data is hosted [here](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642) and is collected and made available by the University of Pennsylvania Health System.
