@@ -5,6 +5,13 @@
 ## Team Members
 Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 
+## Contents
+
+1. [Description](#description)
+2. [Python Environment Set-up](#python-environment-set-up)
+3. [Data](#data)
+4. [Data Science Pipeline](#data-science-pipeline)
+
 
 ## Description
 Our team's capstone project focuses on the application of current state-of-the-art (SOTA) computer vision models to 3D MRI volumes of patients diagnosed with Glioblastoma cancer. Glioblastoma (GBM) is a very aggressive form of cancer, and "survival rates and mortality statistics for GMB **have been virtually unchanged** for decades." [Data source: BrainTumor.org](https://braintumor.org/events/glioblastoma-awareness-day/about-glioblastoma/)
@@ -24,6 +31,13 @@ Our motivations include:
 1. Automated Brain Tumor Segmentation
 2. Biomaker prediction (classification)
 3. Brain Tumor detection (classification / anomaly detection)
+
+## Python Environment Set-up
+
+1. Required `python --version`: Python 3.10.12
+2. Package requirements: `requirements.txt`
+
+First, ...
 
 ## Data
 We are using a data set from the Cancer Imaging Archive for segmentation and classification of brain MRI scans for patients diagnosed to have Glioblastoma-type cancer. The data is hosted [here](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70225642) and is collected and made available by the University of Pennsylvania Health System.
@@ -47,6 +61,7 @@ This data set includes:
 1. 3D mpMRI Images
     * T1, T2, T1-GD, and T2-Flair attribute volumes (~630 patients of 1-5+ GB each, 800,000+ images)
     * DICOM and NIFTI format
+        * NIFTI images are skull-stripped and registered
     * Cancerous and non-cancerous instances
     * Additional dataset of MRI images from normal, healthy patients (600 images with T1, T2, and PD-weighted attributes)
 2. Brain Tumor annotations
