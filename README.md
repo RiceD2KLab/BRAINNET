@@ -8,9 +8,34 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 ## Contents
 
 1. [Description](#description)
-2. [Python Environment Set-up](#python-environment-set-up)
-3. [Data](#data)
-4. [Data Science Pipeline](#data-science-pipeline)
+1. [Repository Structure](#repository-structure)
+1. [Python Environment Set-up](#python-environment-set-up)
+1. [Data](#data)
+1. [Data Science Pipeline](#data-science-pipeline)
+
+## Repository Structure
+
+```
+├── data
+├── img
+│   └── general
+├── models
+│   └── autoencoder
+└── src
+    ├── auth
+    ├── models
+    ├── utils
+    └── visualization
+```
+
+* `data/` directory containing instructions to retrieve the dataset
+* `img/` directory for saving images used in analyses, presentations, and reports
+* `models/` directory containing fitted model weights for re-use
+* `src/` directory contains all source code
+    * `auth/` directory contains information for connecting to Google storage
+    * `models/` directory contains python modules for custom model implementations
+    * `utils/` directory contains python modules for various custom routines such as data retrieval, data wrangling, and metrics
+    * `visualization/` directory contains python modules for custom visualization functions
 
 
 ## Description
