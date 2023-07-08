@@ -339,6 +339,13 @@ class DataHandler:
         else:
             return os.path.exists(source_path)
         
+    def file_exists(self, train_dir_prefix, file_name, use_cloud=True):
+        source_path = self._get_train_dir(file_name=file_name, train_dir_prefix=train_dir_prefix)
+        if use_cloud:
+            return self.google_client.file_exists(source_path)
+        else:
+            return os.path.exists(source_path)
+        
     def get_mri_subj_id(self, file_name):
         # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
         # subj_id: 00006

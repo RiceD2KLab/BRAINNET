@@ -11,6 +11,10 @@ class GStorageClient:
         # authenticate storage client if specified. if not, runtime will automatically be used
         self.storage_client = gcs.Client.from_service_account_json(STORAGE_AUTH_FILE)
         
+    def file_exists(self, source_path):
+        blob = self._get_blob_client(source_path)
+        return blob.exists()
+
     def download_blob_as_file(self, source_path, destination_path):
         # save the blob into the temp file path
         blob = self._get_blob_client(source_path)
