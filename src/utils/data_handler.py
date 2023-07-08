@@ -59,6 +59,13 @@ SEGMENTS = {
     4: "ET"
 }
 
+SEGMENT_COLORS = {
+    0: "gray",
+    1: "red",
+    2: "green",
+    4: "yellow"
+}
+
 class StructuralScan(str, Enum):
     T1 = "T1"
     T2 = "T2"
