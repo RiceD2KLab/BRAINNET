@@ -52,20 +52,6 @@ DATA_DIR = "content/data"
 # this will always be in google storage
 TRAIN_DIR = "training"
 
-SEGMENTS = {
-    0: "ELSE",
-    1: "NCR",
-    2: "ED",
-    4: "ET"
-}
-
-SEGMENT_COLORS = {
-    0: "gray",
-    1: "red",
-    2: "green",
-    4: "yellow"
-}
-
 class StructuralScan(str, Enum):
     T1 = "T1"
     T2 = "T2"
