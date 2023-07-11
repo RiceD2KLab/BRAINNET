@@ -158,7 +158,7 @@ When you are done working, remember to deactivate to base: `$ conda deactivate`
 
 As of July 12, 2023, the main modules of our software are contained across multiple jupyter notebooks located under `BioCV_Su23/src/notebooks/`. With future releases, we intend to migrate these prototyping notebooks to a Python app. For specific details about the notebooks, please see the source [README](src/README.md).
 
-We have utilized [Google Colab's](colab.research.google.com/) resources for prototyping our models. If you do not stand alone hardware with a dedicated GPU with a minimum of 16 GB of RAM, we recommend you do likewise. We have written custom modules located within `src/` and to be able to use them, the entire git repository needs to be cloned to a Google drive. The easiest way to do this is:
+We have utilized [Google Colab's](colab.research.google.com/) resources for prototyping our models. If you do not have stand alone hardware with a minimum of 26 GB system RAM and a dedicated GPU with a minimum of 16 GB of vRAM, we recommend you do likewise. We have written custom modules located within `src/` and to be able to use them, the entire git repository needs to be cloned to a Google drive. The easiest way to do this is:
 
 1. Clone the repository locally
 1. Upload the repository to your Google drive
