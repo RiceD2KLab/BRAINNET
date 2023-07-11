@@ -54,12 +54,14 @@ The following instructions for setting up a virtual environment assume you are u
 3. Set-up a new virtual environment using `venv`
 4. Install required packages using `pip` and the `requirements.txt` file
 
-**Note**: Prior to installing anything, ensure your Ubuntu is up-to-date:
+**Note**: Prior to installing anything, ensure your Ubuntu is up-to-date. Open a terminal and:
 
 ```
 $ sudo apt update
 $ sudo apt upgrade
 ```
+
+*The following steps are all completed from within a terminal*
 
 ### Step 1: Install and set-up `pyenv`
 
