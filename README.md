@@ -20,7 +20,7 @@ BioCV_Su23/
 ├── data
 ├── img
 │   └── general
-├── models
+├── fitted_models
 │   └── autoencoder
 └── src
     ├── auth
@@ -32,7 +32,7 @@ BioCV_Su23/
 
 * `data/` directory containing instructions to retrieve the dataset
 * `img/` directory for saving images used in analyses, presentations, and reports
-* `models/` directory containing fitted model weights for re-use
+* `fitted_models/` directory containing fitted model weights for re-use
 * `src/` directory contains all source code
     * `auth/` directory contains information for connecting to Google storage
     * `models/` directory contains python modules for custom model implementations
