@@ -16,14 +16,16 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 ## Repository Structure
 
 ```
+.
 ├── data
 ├── img
-│   └── general
+│   └── general
 ├── models
-│   └── autoencoder
+│   └── autoencoder
 └── src
     ├── auth
     ├── models
+    ├── notebooks
     ├── utils
     └── visualization
 ```
@@ -34,6 +36,7 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 * `src/` directory contains all source code
     * `auth/` directory contains information for connecting to Google storage
     * `models/` directory contains python modules for custom model implementations
+    * `notebooks/` directory contains jupyter notebooks used for prototyping our ideas
     * `utils/` directory contains python modules for various custom routines such as data retrieval, data wrangling, and metrics
     * `visualization/` directory contains python modules for custom visualization functions
 
