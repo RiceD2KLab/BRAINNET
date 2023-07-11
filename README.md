@@ -51,7 +51,7 @@ The following instructions for setting up a virtual environment assume you are u
 
 1. Install and set-up `pyenv` for managing different python versions
 2. Clone the `BioCV_Su23` repository
-3. Install `venv` for managing virtual environments and set up a new virtual environment
+3. Set-up a new virtual environment using `venv`
 4. Install required packages using `pip` and the `requirements.txt` file
 
 **Note**: Prior to installing anything, ensure your Ubuntu is up-to-date:
@@ -90,15 +90,14 @@ libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-d
 1. `$ git clone https://github.com/RiceD2KLab/BioCV_Su23.git`
 
 
-### Step 3: Install and set-up `venv`
+### Step 3: Set-up `venv`
 
-1. Install `$ sudo apt install python3-venv`
-2. Change into the cloned repository: `$ cd BioCV_Su23`
-3. Set the local python version: `$ pyenv local 3.10.12`
-4. Confirm the change: `$ python --version`
-5. Create a virtual environment: `python -m venv .venv`
-6. Activate the virtual environment: `$ source .venv/bin/activate`
-7. When you are done working, *remember to deactivate the environment*: `$ deactivate`
+1. Change into the cloned repository: `$ cd BioCV_Su23`
+2. Set the local python version: `$ pyenv local 3.10.12` $\leftarrow$ includes `venv` so we don't need to install first
+3. Confirm the change: `$ python --version`
+4. Create a virtual environment: `python -m venv .venv`
+5. Activate the virtual environment: `$ source .venv/bin/activate`
+6. When you are done working, *remember to deactivate the environment*: `$ deactivate`
 
 ### Step 4: Install required packages
 
