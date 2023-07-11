@@ -47,7 +47,64 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 1. Required `python --version`: Python 3.10.12
 2. Package requirements: `requirements.txt`
 
-First, ...
+The following instructions for setting up a virtual environment assume you are using Linux (or Windows Subsystem for Linux 2), and specifically, Ubuntu 20.04.6 LTS. The overall sequence of steps are:
+
+1. Install and set-up `pyenv` for managing different python versions
+2. Clone the `BioCV_Su23` repository
+3. Install `venv` for managing virtual environments and set up a new virtual environment
+4. Install required packages using `pip` and the `requirements.txt` file
+
+**Note**: Prior to installing anything, ensure your Ubuntu is up-to-date:
+
+```
+$ sudo apt update
+$ sudo apt upgrade
+```
+
+### Step 1: Install and set-up `pyenv`
+
+For full details, please refer to the `pyenv` [github repository](https://github.com/pyenv/pyenv#getting-pyenv). The steps are as follows:
+
+1. Ensure you are in your home directory: `$ cd`
+2. Clone the `pyenv` repository: `$ git clone https://github.com/pyenv/pyenv.git ~/.pyenv`
+3. Set up your shell for Pyenv:
+    * `$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc`
+    * `$ echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc`
+    * `$ echo 'eval "$(pyenv init -)"' >> ~/.bashrc`
+4. Repeat the above for `.profile`:
+    * `$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.profile`
+    * `$ echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.profile`
+    * `$ echo 'eval "$(pyenv init -)"' >> ~/.profile`
+5. Restart the shell: `$ exec "$SHELL"
+6. Install necessary Python build dependencies:
+
+```
+$ sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev curl \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+```
+7. Install python version 3.10.12: `$ pyenv install 3.10.12` 
+
+### Step 2: Clone the repository
+
+1. `$ git clone https://github.com/RiceD2KLab/BioCV_Su23.git`
+
+
+### Step 3: Install and set-up `venv`
+
+1. Install `$ sudo apt install python3-venv`
+2. Change into the cloned repository: `$ cd BioCV_Su23`
+3. Set the local python version: `$ pyenv local 3.10.12`
+4. Confirm the change: `$ python --version`
+5. Create a virtual environment: `python -m venv .venv`
+6. Activate the virtual environment: `$ source .venv/bin/activate`
+7. When you are done working, *remember to deactivate the environment*: `$ deactivate`
+
+### Step 4: Install required packages
+
+1. With the virtual environment active: `$ pip install -r requirements.txt`
+
+*Note*: This will take a few minutes.
 
 
 ## Description
