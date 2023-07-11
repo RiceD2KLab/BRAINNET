@@ -240,8 +240,21 @@ This data set includes:
 
 ## Data Science Pipeline
 
-1. 3D Images
-2. Wrangled Images
-3. ML model
-4. Label Predictions
-5. Performance Evaluation
+![pipeline](img/general/ds_pipeline.png)
+
+A high level summary of our data science pipline is as follows:
+
+1. Data Acquisition
+2. Data Exploration
+3. Data Wrangling
+4. Modeling
+5. Prediction (Inference)
+6. Evaluation
+
+Through data acquistion, exploration, and wrangling, we convert 3D MRI volumes into 2D RGB images for use in our models.
+
+For classification, we use a convolutional neural network called VGG19 to predict if an image contains a tumor.
+
+For segmentation, we use a vision transformer called Maskformer to predict the tumor segments within a 2D image.
+
+Following the modeling tasks, we quantitatively evaluate the prediction results.
