@@ -18,10 +18,10 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 ```
 BioCV_Su23/
 ├── data
-├── img
-│   └── general
 ├── fitted_models
 │   └── autoencoder
+├── img
+│   └── general
 └── src
     ├── auth
     ├── models
