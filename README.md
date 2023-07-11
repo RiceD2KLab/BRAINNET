@@ -47,6 +47,13 @@ BioCV_Su23/
 1. Required `python --version`: Python 3.10.12
 2. Package requirements: `requirements.txt`
 
+There are two optional ways to set up your environment:
+
+1. Using Linux (and MacOS) with Pyenv, Venv, and Pip
+1. Using Linux/Windows/MacOS with Anaconda/Miniconda
+
+### Option 1: Linux + Pyenv + Venv + Pip
+
 The following instructions for setting up a virtual environment assume you are using Linux (or Windows Subsystem for Linux 2), and specifically, Ubuntu 20.04.6 LTS. The overall sequence of steps are:
 
 1. Install and set-up `pyenv` for managing different python versions
@@ -63,7 +70,7 @@ $ sudo apt upgrade
 
 *The following steps are all completed from within a terminal*
 
-### Step 1: Install and set-up `pyenv`
+#### Step 1: Install and set-up `pyenv`
 
 For full details, please refer to the `pyenv` [github repository](https://github.com/pyenv/pyenv#getting-pyenv). The steps are as follows:
 
@@ -89,12 +96,12 @@ libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-d
 
 *Note*: This will take a few minutes. Be patient, the process is not hung. 
 
-### Step 2: Clone the repository
+#### Step 2: Clone the repository
 
 1. `$ git clone https://github.com/RiceD2KLab/BioCV_Su23.git`
 
 
-### Step 3: Set-up `venv`
+#### Step 3: Set-up `venv`
 
 1. Change into the cloned repository: `$ cd BioCV_Su23`
 2. Set the local python version: `$ pyenv local 3.10.12` $\leftarrow$ includes `venv` so we don't need to install first
@@ -103,11 +110,47 @@ libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-d
 5. Activate the virtual environment: `$ source .venv/bin/activate`
 6. When you are done working, *remember to deactivate the environment*: `$ deactivate`
 
-### Step 4: Install required packages
+#### Step 4: Install required packages
 
 1. With the virtual environment active: `$ pip install -r requirements.txt`
 
 *Note*: This will take a few minutes.
+
+Your environment is now ready.
+
+### Option 2: Linux/Windows/MacOS + conda (anaconda or miniconda)
+
+*Note*: This method makes the virtual environment accessible to other projects as it creates a conda environment as opposed to a self-contained virtual environment specific to the project directory.
+
+#### Step 1: Install either anaconda or miniconda
+
+If you do not already have Anaconda or Miniconda installed, see below. Anaconda includes a number of packages useful for typical data science projects, while miniconda is a minimal installation. Either will work, you just need `conda` for environment management which is provided by both.
+
+1. [Anaconda](https://www.anaconda.com/)
+1. [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+
+From this point forward, all steps are completed in a terminal. If you are working in Linux or MacOS, you can use a normal terminal. In Windows, you will either want to use AnacondaPrompt or PowerShell.
+
+#### Step 2: Clone the repository
+
+1. `$ git clone https://github.com/RiceD2KLab/BioCV_Su23.git`
+
+#### Step 3: Create a conda Python 3.10.12 environment
+
+1. `$ conda create -n biocv python=3.10.12`
+1. Enter the project directory: `$ cd BioCV_Su23`
+1. Activate your newly created conda environment: `$ conda activate biocv`
+1. Update pip: `$ pip install update pip`
+
+#### Step 4: Install required packages
+
+1. `$ pip install -r requirements.txt`
+
+*Note*: This will take some time.
+
+Your new environment is now ready.
+
+When you are done working, remember to deactivate to base: `$ conda deactivate`
 
 
 ## Description
