@@ -83,7 +83,9 @@ $ sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev \
 libbz2-dev libreadline-dev libsqlite3-dev curl \
 libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 ```
-7. Install python version 3.10.12: `$ pyenv install 3.10.12` 
+7. Install python version 3.10.12: `$ pyenv install 3.10.12`
+
+*Note*: This will take a few minutes. Be patient, the process is not hung. 
 
 ### Step 2: Clone the repository
 
