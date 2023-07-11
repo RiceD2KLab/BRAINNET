@@ -112,6 +112,7 @@ libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-d
 
 #### Step 4: Install required packages
 
+1. Update pip: `$ pip install pip update`
 1. With the virtual environment active: `$ pip install -r requirements.txt`
 
 *Note*: This will take a few minutes.
