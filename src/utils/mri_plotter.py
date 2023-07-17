@@ -142,7 +142,7 @@ class MRIPlotter:
             axs_element.legend(handles=handles, loc='lower right')
     
     def plot_masks(self, masks, fig, axs, row, col, title, legends, **kwargs):
-        colors = ["#006400", "#ff00ff"]
+        colors = ["red", "green"]
         axs_element = self._get_subplot_axs(fig, axs, row, col)
         for mask_idx, mask in enumerate(masks):
             color = colors[mask_idx]
