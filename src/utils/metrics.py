@@ -154,16 +154,19 @@ def _exec_hausdorff_95(segm_pred, segm_true, segm_id=None, plot=False):
     elif mask_true.ndim == 2:
         connectivity = 8
          
-    if plot:
-        all_dist_pred = _calc_surface_distances(mask_pred, mask_true, connectivity=connectivity)
-        all_dist_true = _calc_surface_distances(mask_true, mask_pred, connectivity=connectivity)
-        surface_dist_pred = all_dist_pred[all_dist_pred >= 0]
-        surface_dist_true = all_dist_true[all_dist_true >= 0]
-        
-        hd95_val = np.percentile(np.hstack((surface_dist_true, surface_dist_pred)), 95)
-        return hd95_val, surface_dist_pred, surface_dist_true
-    else:
-        return mdp.hd95(mask_pred, mask_true, connectivity=connectivity)
+    try:
+        if plot:
+            all_dist_pred = _calc_surface_distances(mask_pred, mask_true, connectivity=connectivity)
+            all_dist_true = _calc_surface_distances(mask_true, mask_pred, connectivity=connectivity)
+            surface_dist_pred = all_dist_pred[all_dist_pred >= 0]
+            surface_dist_true = all_dist_true[all_dist_true >= 0]
+            
+            hd95_val = np.percentile(np.hstack((surface_dist_true, surface_dist_pred)), 95)
+            return hd95_val, surface_dist_pred, surface_dist_true
+        else:
+            return mdp.hd95(mask_pred, mask_true, connectivity=connectivity)
+    except:
+        return np.inf
 
 # endregion
 
