@@ -1,7 +1,7 @@
 ###############################################################################
 # The purpose of this module is to design an autoencoder which learns a
-# meaningful compressed representation of the 4 structural MRI scans and 
-# compresses them down into three feature maps without changing the 
+# meaningful compressed representation of the 4 structural MRI scans and
+# compresses them down into three feature maps without changing the
 # spatial dimensions.
 ###############################################################################
 import torch
@@ -12,7 +12,7 @@ class Autoencoder(nn.Module):
     def __init__(self, input_nchannels=4):
         """
         Defines an autoencoder object that learns a compressed
-        representation of the 4 MRI structural scans down to 
+        representation of the 4 MRI structural scans down to
         3 feature maps, without changing spatial dimensions
         """
         super(Autoencoder, self).__init__()
@@ -62,12 +62,12 @@ class Autoencoder(nn.Module):
                 nn.init.kaiming_normal_(module.weight)
                 nn.init.zeros_(module.bias)
 
-    
+
     def forward(self, x):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return decoded
-    
+
 
 def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100, outpath=None):
     """
@@ -85,7 +85,7 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     """
     # specify the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     # send the model and loss function to the device
     model.to(device)
     loss_fn.to(device)
@@ -108,13 +108,13 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
             # backward pass and optimization
             loss.backward()
             optimizer.step()
-        
+
         # print the status
         print(f"Epoch {epoch + 1}/{nepochs} - Loss: {loss.item()}")
 
     # save the model
     if outpath:
-        torch.save(model, outpath)
+        torch.save(model.state_dict(), outpath)
 
 
 def normalize_channels(mri_tensor):
@@ -134,5 +134,5 @@ def normalize_channels(mri_tensor):
         chan_max = mri_tensor[channel, :, :, :].max()
         normalized_mri_tensor[channel, :, :, :] = ((normalized_mri_tensor[channel, :, :, :] - chan_min) /
                                                    (chan_max - chan_min))
-    
+
     return normalized_mri_tensor
