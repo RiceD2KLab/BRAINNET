@@ -244,6 +244,13 @@ class DataHandler:
                 lines.append(line.strip())
         return lines
         
+    def load_torch_model(self, file_name, train_dir_prefix, device, use_cloud=True):
+        if self.use_cloud or use_cloud:
+            model_stream = self.load_from_stream(file_name=file_name, train_dir_prefix=train_dir_prefix, use_cloud=True)
+            return torch.load(model_stream, map_location=device)
+        else:
+            return torch.load(model_stream, map_location=device)
+    
     def save_torch_model(self, file_name:str, model, train_dir_prefix = None):
         
         source_path = self.create_temp_file(file_name)
@@ -339,43 +346,6 @@ class DataHandler:
         else:
             return os.path.exists(source_path)
         
-    def get_mri_subj_id(self, file_name):
-        # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
-        # subj_id: 00006
-        if file_name.strip().split('.')[-1] == 'gz':
-            return file_name.strip().split('_')[0].split('-')[-1]
-        return None
-    
-    def get_mri_subj(self, file_name):
-        # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
-        # result: UPENN-GBM-00006
-        if file_name.strip().split('.')[-1] == 'gz':
-            return file_name.strip().split('_')[0]
-        return None
-        
-    def get_mri_slice_file_name(self, file_name):
-        # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
-        # result: UPENN-GBM-00006_1.nii.gz
-        if file_name.strip().split('.')[-1] == 'gz':
-            return file_name.strip().split('_')[0] + \
-                        "_" + file_name.strip().split('_')[3]
-        return None
-    
-    def get_mri_file_no(self, file_name):
-        # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
-        # file_no: 11
-        if file_name.strip().split('.')[-1] == 'gz':
-            return int(file_name.strip().split('.')[0].split('_')[-1])
-        return None
-    
-    def get_largest_tumor_slice_idx(self, img_data, sum=False):
-        non_zero_x = np.count_nonzero(img_data, axis=0)
-        if sum is True:
-            non_zero_x = np.sum(img_data, axis=0)
-        total_y = np.sum(non_zero_x, axis=0 )
-        slice_idx = np.argmax(total_y)
-        return slice_idx, total_y[slice_idx]
-    
     def download_from_onedrive(self, mri_type: MriType):
         
         directory = self._get_mri_dir(mri_type=mri_type)

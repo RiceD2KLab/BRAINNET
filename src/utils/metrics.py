@@ -1,3 +1,4 @@
+'''Metrics for both classification and segmentation'''
 
 from enum import Enum
 import medpy.metric.binary as mdp
