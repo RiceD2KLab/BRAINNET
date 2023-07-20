@@ -1,4 +1,4 @@
-'''Functions used for inferencing'''
+# All functions used for inferencing
 
 import numpy as np
 import torch
@@ -16,7 +16,7 @@ import utils.mri_common as mri_common
 from utils.data_handler import DataHandler, MriType
 from utils.maskformer_dataset import MaskformerMRIDataset, collate_fn
 
-def get_mask_from_segm(segm_result: List[torch.Tensor]):
+def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
     # extracts prediction from post_process_semantic_segmentation result
     pred_class_labels = set([item["label_id"] for item in segm_result['segments_info']])
     pred_class_labels = sorted(list(pred_class_labels))
@@ -37,27 +37,69 @@ def get_mask_from_segm(segm_result: List[torch.Tensor]):
         mask_pred_2d = mask_pred_2d.astype(np.uint8)
         pred_mask_labels[mask_idx, :, :] = mask_pred_2d
 
-    # output is predicted mask with shape: (n, 512, 512)
-    return pred_mask_labels
-
+    # output is predicted mask with shape: (num_labels, height, width)
+    return pred_mask_labels, pred_class_labels
+    
 class MaskFormerInference():
-    def __init__(self, data_handler: DataHandler, model: MaskFormerModel, processor: MaskFormerImageProcessor, transform: Compose):
+    '''Assumes that the data reside in one folder'''
+    
+    def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, transform: Compose):
         self.model = model
         self.data_handler = data_handler
         self.processor = processor
         self.transform = transform
+        self.data_identifier = data_identifier
+    
+        # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
+        all_files_in_dir = self.data_handler.list_mri_in_dir(mri_type=data_identifier)
         
-    def predict_3d_mask(self, data_list:List[str], data_identifier: MriType):
+        # UPENN-GBM-00040_122.nii.gz, UPENN-GBM-00073_20.nii.gz, UPENN-GBM-00016_139.nii.gz
+        self.all_files = list(set([mri_common.get_mri_slice_file_name(file_name) for file_name in all_files_in_dir]))
         
+    def get_patient_slices(self, subj: str):
+        # if substring/subj is in the filename, include that file in the list of slices
+        vol_list = [file_name for file_name in self.all_files if subj in file_name]
+        
+        # sort slices: UPENN-GBM-00073_1.nii.gz, UPENN-GBM-00073_2.nii.gz, UPENN-GBM-00073_3.nii.gz
+        vol_list_sorted = sorted(vol_list, key=lambda x: int(x.split('_')[1].split('.')[0]))
+        return vol_list_sorted
+        
+    def predict_segm(self, batch):
+        first_img =  batch["pixel_values"][0]
+        target_size = transforms.ToPILImage()(first_img).size[::-1]
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(device)
+        self.model.eval()
+        
+        with torch.no_grad():
+            outputs = self.model(
+                            pixel_values=batch["pixel_values"].to(device),
+                            mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
+                            class_labels=[labels.to(device) for labels in batch["class_labels"]],
+                    )
+            
+            torch.cuda.empty_cache()
+            
+        # post-processing/inference
+        results=self.processor.post_process_instance_segmentation(outputs, target_sizes=[target_size])[0]
+        return results
+    
+    def predict_patient_mask(self, subj_id: str):
+        
+        print("Performing inference on", subj_id)
+        # get all slices for one patient or subj: expected is 146
+        data_list = self.get_patient_slices(subj_id)  
+
         # define dataset given provided list
         dataset = MaskformerMRIDataset(data_handler=self.data_handler, 
-                                       data_identifier=data_identifier,
+                                       data_identifier=self.data_identifier,
                                        data_list=data_list, processor=self.processor,
                                        transform=self.transform, augment=False)
 
         # define data loader
+        # TODO: review if batch_size is fixed
         batch_size = 1
-        metric_dataloader = DataLoader(dataset, batch_size=batch_size,
+        dataloader = DataLoader(dataset, batch_size=batch_size,
                                         shuffle=False, collate_fn=collate_fn)
 
         # initalize 3d variables using shape of first input
@@ -79,28 +121,19 @@ class MaskFormerInference():
         self.model.to(device)
 
         self.model.eval()
-        with torch.no_grad():
-            for ibatch, batch in enumerate(metric_dataloader):
-
-                # forward pass
-                output_cur = self.model(
-                        pixel_values=batch["pixel_values"].to(device),
-                        mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
-                        class_labels=[labels.to(device) for labels in batch["class_labels"]],
-                )
+        for ibatch, batch in enumerate(dataloader):
+            
+            with torch.no_grad():
 
                 # get first item in batch where batch size = 1
                 image_cur = batch["pixel_values"][0]
                 image_3d[ibatch, :, :, :] = image_cur.numpy()
 
-                # post-processing/inference
-                result_cur = self.processor.post_process_instance_segmentation(output_cur,
-                                                                        target_sizes=[transforms.ToPILImage()(image_cur).size[::-1]])[0]
+                # post-processing/segmentation inference
+                segm_result = self.predict_segm(batch)
                 
                 # e.g. (n, 512, 512) where n is the number of existing labels in the prediction
-                pred_class_labels = set([item["label_id"] for item in result_cur['segments_info']])
-                pred_class_labels = sorted(list(pred_class_labels))
-                pred_mask_labels = get_mask_from_segm(segm_result=result_cur)
+                pred_mask_labels, pred_class_labels = get_mask_from_segm_result(segm_result=segm_result)
 
                 # build mask_pred_3d:
                 for mask_idx, label in enumerate(pred_class_labels):
@@ -115,5 +148,7 @@ class MaskFormerInference():
 
                 all_true_labels = list(set(all_true_labels + true_class_labels.tolist()))
                 all_pred_labels = list(set(all_pred_labels + pred_class_labels))
+        
+            torch.cuda.empty_cache()
 
         return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels

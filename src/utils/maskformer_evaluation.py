@@ -25,8 +25,7 @@ class MaskFormerEvaluation():
         else:
             self.all_label_names = list(mri_common.SEGMENTS.values())
 
-    def predict_and_eval(self, subj_file_names: List[str], subj_names: List[str],
-                        mf_inference: MaskFormerInference, data_handler: DataHandler, data_identifier: MriType,
+    def predict_and_eval(self, subj_names: List[str], mf_inference: MaskFormerInference, data_handler: DataHandler,
                         metrics_dir_prefix: str, metrics_file_name: str, recalculate: bool):
         
         all_dice = []
@@ -37,10 +36,7 @@ class MaskFormerEvaluation():
         metrics_summary = {}
         
         if recalculate:
-                all_dice, all_hd95, all_common_metrics, error_files = self._predict_and_calc_metrics(subj_file_names=subj_file_names, 
-                                                                                            subj_selected=subj_names, 
-                                                                                            data_identifier= data_identifier,
-                                                                                            mf_inference=mf_inference)
+                all_dice, all_hd95, all_common_metrics, error_files = self._predict_and_calc_metrics(subj_selected=subj_names, mf_inference=mf_inference)
 
                 print("Files with error:", error_files)
 
@@ -256,24 +252,17 @@ class MaskFormerEvaluation():
             results.append(result)
         return results                 
 
-    def _predict_and_calc_metrics(self, subj_file_names: List[str], 
-                                subj_selected: List[str], 
-                                mf_inference: MaskFormerInference,
-                                data_identifier: MriType):
+    def _predict_and_calc_metrics(self, subj_selected: List[str], mf_inference: MaskFormerInference):
         all_dice = []
         all_hd95 = []
         all_common_metrics = []
         error_files = []
         mask_true_3d, mask_pred_3d = None, None
 
-        for subj in subj_selected:
+        for subj_id in subj_selected:
 
-            print("Performing inference on", subj)
-            # get all slices for one patient or subj (expected is 146)
-            data_list = mf_utils.get_patient_slices(subj_file_names, subj)
-            
             # perform inference for each slice within the volume
-            mask_3d_pred_results = mf_inference.predict_3d_mask(data_list=data_list, data_identifier=data_identifier)
+            mask_3d_pred_results = mf_inference.predict_patient_mask(subj_id=subj_id)
             mask_true_3d, mask_pred_3d = mask_3d_pred_results[1], mask_3d_pred_results[2]
             
             # since prediction range is from 0 to 255, convert data back to binary
@@ -285,7 +274,7 @@ class MaskFormerEvaluation():
                 mask_true_3d_binary = mf_utils.to_brats_mask(mask_true_3d)
             
             try:
-                print("Calculating metrics for ", subj)
+                print("Calculating metrics for ", subj_id)
                 # dice coefficient
                 # output array of dice score for all segments: [0.9, 0.8, 0.92, 0.3]
                 dice_score = self._calc_metric_all_segments(self.all_label_names, metrics.calc_dice_score, mask_pred_3d_binary, mask_true_3d_binary)
@@ -307,8 +296,8 @@ class MaskFormerEvaluation():
                 all_common_metrics.append(common_metrics_dict)
 
             except Exception as ex:
-                print(f"Error {subj}", ex)
-                error_files.append(subj)
+                print(f"Error {subj_id}", ex)
+                error_files.append(subj_id)
 
         return  all_dice, all_hd95, all_common_metrics, error_files
     

@@ -7,7 +7,9 @@ from typing import List
 
 # local imports
 import utils.mri_common as mri_common
+
 from utils.mri_plotter import MRIPlotter
+from utils.data_handler import DataHandler, MriType
 
 mri_plt = MRIPlotter()
 
@@ -111,16 +113,15 @@ def get_subset_files(subj_files, file_no_min, file_no_max, subj_id_min, subj_id_
     subj_filenames.sort()
     return subj_filenames
 
-def get_patient_slices(file_list: List[str], subj: str):
-    # file_list: entire dataset
-    # subj: patient identifier
-    
-    # if substring/subj is in the filename, include that file in the list of slices
-    vol_list = [file_name for file_name in file_list if subj in file_name]
+def get_all_subj_ids(data_handler: DataHandler, mri_type: MriType):
+    # Obtain full  dataset
+    # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
+    all_slices = data_handler.list_mri_in_dir(mri_type=mri_type)
 
-    # sort the list according to slice number
-    vol_list_sorted = sorted(vol_list, key=lambda x: int(x.split('_')[1].split('.')[0]))
-    return vol_list_sorted
+    # get unique subj_ids: UPENN-GBM-00008, UPENN-GBM-00013 ...
+    all_subjs = [mri_common.get_mri_subj(slice_2d) for slice_2d in all_slices]
+    all_subjs = sorted(list(set(all_subjs)))
+    return all_subjs
 
 def plot_mask_labels(class_labels, pixel_values, mask_labels, title, scale=True):
     n_image = len(class_labels) + 1

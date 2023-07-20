@@ -48,6 +48,7 @@ class MaskformerMRIDataset(Dataset):
         # use the Data Handler class to handle all sorts of image loading
         self.data_handler = data_handler
 
+        # expected format: UPENN-GBM-00008_53.nii.gz, UPENN-GBM-00008_54.nii.gz, UPENN-GBM-00008_55.nii.gz
         self.data_list = data_list.copy()
         self.n_data = len(self.data_list)
 
