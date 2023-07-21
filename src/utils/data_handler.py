@@ -17,33 +17,53 @@ from utils.google_storage import GStorageClient
 from onedrivedownloader import download
     
 # All constants from source directories
-# Define One Drive urls and file names. files are similar in google storage but unzipped
+# Define One Drive urls and file names
 IMAGES_STRUCTURAL_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ER8oOEAm1ANGlK4sodUPdX0B6_7IxmbRoneyo-RXI2HYOg"
 IMAGES_STRUCTURAL_FNAME = "images_structural"
 
+# Manually annotated by medical experts
 IMAGES_ANNOT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EbmrLEe1ZgpNkaujtMtlDIEB9rQ0Zj82dOWIttA8sD5lSg"
 IMAGES_ANNOT_FNAME = "images_segm" 
 
 IMAGES_ANNOT_REDUCED_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EfqrvokObOJEhovsqLl_sscBgplo836OUdN5kJzAYqPZyg"
 IMAGES_ANNOT_REDUCED_FNAME = "images_annot_reduced"
 
+# Predicted labels from BraTs winners
 IMAGES_AUTO_SEGM_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EToY-Cli4vxMqYwHx_NZ4JsBi1Lo8tOskj9zb4_AZmDfcg"
 IMAGES_AUTO_SEGM_FNAME = "automated_segm"
 
 IMAGES_AUTO_SEGM_REDUCED_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXwqKvC8QpBBjFQUXzKR1-IBtJeP1hwXUQAoJOneJx4-Hw"
 IMAGES_AUTO_SEGM_REDUCED_FNAME = "automated_segm_reduced"
 
-IMAGES_TRAIN_2D_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ETxkBw8cJS9InmWhUUFx0l0BnAES2uSbCaLn0jrMi-HK3Q"
-IMAGES_TRAIN_2D_FNAME = "train_2d"
+# 2d slices depth direction
+IMAGES_TRAIN_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ETxkBw8cJS9InmWhUUFx0l0BnAES2uSbCaLn0jrMi-HK3Q"
+IMAGES_TRAIN_DEPTH_FNAME = "train_2d"
  
-IMAGES_VAL_2D_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeLd0vd4IuxBn5hPlzO8gz0BT2kDX9Uo9AkNqxR_sjKbMg"
-IMAGES_VAL_2D_FNAME = "val_2d" 
+IMAGES_VAL_DEPTH_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeLd0vd4IuxBn5hPlzO8gz0BT2kDX9Uo9AkNqxR_sjKbMg"
+IMAGES_VAL_DEPTH_FNAME = "val_2d" 
 
-IMAGES_TRAIN_2D_CROSS_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWnXLCwsONBNpzziTciJXt4B68qkcVfZTfSXRcS9gxWWGQ?e=r5xDU4"
-IMAGES_TRAIN_2D_CROSS_FNAME = "train_2d_cross"
+IMAGES_TEST_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/Ea_s6aJW5PxOr4EkayzPUwwB9wm1W52yPAG6x6gpfbVVig?e=U1lloh"
+IMAGES_TEST_DEPTH_FNAME = "test_2d_depth"
+
+# 2d slices cross-side direction
+IMAGES_TRAIN_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWnXLCwsONBNpzziTciJXt4B68qkcVfZTfSXRcS9gxWWGQ?e=r5xDU4"
+IMAGES_TRAIN_CROSS_SIDE_FNAME = "train_2d_cross"
  
-IMAGES_VAL_2D_CROSS_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EdKtKyMfy2lJvdGGSSz23yEB34_C4MiEm2BmRE9q451Lgg?e=9dK2NO"
-IMAGES_VAL_2D_CROSS_FNAME = "val_2d_cross" 
+IMAGES_VAL_CROSS_SIDE_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EdKtKyMfy2lJvdGGSSz23yEB34_C4MiEm2BmRE9q451Lgg?e=9dK2NO"
+IMAGES_VAL_CROSS_SIDE_FNAME = "val_2d_cross" 
+
+IMAGES_TEST_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZUVF6SPoPxJhVGHTSHFKWQBt5cs9RgrUvi41uTrW_6JPg?e=VctJq9"
+IMAGES_TEST_CROSS_SIDE_FNAME = "test_2d_cross_side"
+
+# 2D slices cross-front direction
+IMAGES_TRAIN_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXlKRVj-rJVJqVvb9RheOMEBknchUFWfvYsgPG1oU_phfQ"
+IMAGES_TRAIN_CROSS_FRONT_FNAME = "train_2d_cross_front"
+
+IMAGES_VAL_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWkSF6l1fUdMjb6pIltemmQB9Kkc6tqrJbehbM5ruWYvpw?e=kNZru1"
+IMAGES_VAL_CROSS_FRONT_FNAME = "val_2d_cross_front"
+
+IMAGES_TEST_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZqlm_4lGppMl65Sd0nJp7UBZ8YRq6PVRHTOKsWKV1GpTQ?e=IuTLvH"
+IMAGES_TEST_CROSS_FRONT_FNAME = "test_2d_cross_front"
 
 # All constants for destination directories
 # this will be either in google storage or runtime depending on flag
@@ -65,11 +85,16 @@ class MriType(Enum):
     STRUCT_SCAN_REDUCED = 4
     AUTO_SEGMENTED_REDUCED = 5
     ANNOTATED_REDUCED = 6
-    TRAIN_2D = 7
-    VAL_2D = 8
-    TRAIN_2D_CROSS = 9
-    VAL_2D_CROSS = 10
-    
+    TRAIN_2D_DEPTH = 7
+    VAL_2D_DEPTH = 8
+    TEST_2D_DEPTH = 9
+    TRAIN_2D_CROSS_SIDE = 10
+    VAL_2D_CROSS_SIDE = 11
+    TEST_2D_CROSS_SIDE = 12
+    TRAIN_2D_CROSS_FRONT = 13
+    VAL_2D_CROSS_FRONT = 14
+    TEST_2D_CROSS_FRONT = 15
+
 class DataHandler:
     """
         Handles all functions related to MRI and training data management such as saving, downloading and reading
@@ -156,7 +181,6 @@ class DataHandler:
         # initialize data
         destination_path = None
         nifti = None
-        
         # construct the full file path using a helper function
         mri_file_path = self._get_full_path(subj_id=subj_id, mri_type=mri_type, struct_scan=struct_scan, file_no=file_no)
        
@@ -377,18 +401,34 @@ class DataHandler:
                 
             elif mri_type == MriType.ANNOTATED_REDUCED:
                 download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=dir_annot_reduced)
-                
-            elif mri_type == MriType.TRAIN_2D:
-                download(IMAGES_TRAIN_2D_URL, filename=filename, unzip_path=dir_2d_slices)
-
-            elif mri_type == MriType.VAL_2D:
-                download(IMAGES_VAL_2D_URL, filename=filename, unzip_path=dir_2d_slices)
-
-            elif mri_type == MriType.TRAIN_2D_CROSS:
-                download(IMAGES_TRAIN_2D_CROSS_URL, filename=filename, unzip_path=dir_2d_slices)
             
-            elif mri_type == MriType.VAL_2D_CROSS: 
-                download(IMAGES_VAL_2D_CROSS_URL, filename=filename, unzip_path=dir_2d_slices)
+            elif mri_type == MriType.TRAIN_2D_DEPTH:
+                download(IMAGES_TRAIN_DEPTH_URL, filename=filename, unzip_path=dir_2d_slices)
+        
+            elif mri_type == MriType.VAL_2D_DEPTH:
+                download(IMAGES_VAL_DEPTH_URL, filename=filename, unzip_path=dir_2d_slices)
+                
+            elif mri_type == MriType.TEST_2D_DEPTH:
+                download(IMAGES_TEST_DEPTH_URL, filename=filename, unzip_path=dir_2d_slices)
+
+            elif mri_type == MriType.TRAIN_2D_CROSS_SIDE:
+                download(IMAGES_TRAIN_CROSS_SIDE_URL, filename=filename, unzip_path=dir_2d_slices)
+            
+            elif mri_type == MriType.VAL_2D_CROSS_SIDE:
+                download(IMAGES_VAL_CROSS_SIDE_URL, filename=filename, unzip_path=dir_2d_slices)
+                
+            elif mri_type == MriType.TEST_2D_CROSS_SIDE: 
+                download(IMAGES_TEST_CROSS_SIDE_URL, filename=filename, unzip_path=dir_2d_slices)
+    
+            elif mri_type == MriType.TRAIN_2D_CROSS_FRONT:
+                download(IMAGES_TRAIN_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
+            
+            elif mri_type == MriType.VAL_2D_CROSS_FRONT:
+                download(IMAGES_VAL_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
+                
+            elif mri_type == MriType.TEST_2D_CROSS_FRONT: 
+                download(IMAGES_TEST_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
+    
     
     def create_temp_file(self, file_path):
         # this will create a file in the commonly used temporary directory in Python 
@@ -404,6 +444,17 @@ class DataHandler:
         
         # build file name and supply the file path based on current onedrive folder structure
         # the case of structural images is different since each subject has its own folder
+        modelling_dataset = [
+            MriType.TRAIN_2D_DEPTH,
+            MriType.TRAIN_2D_CROSS_SIDE,
+            MriType.TRAIN_2D_CROSS_FRONT,
+            MriType.VAL_2D_DEPTH,
+            MriType.VAL_2D_CROSS_SIDE,
+            MriType.VAL_2D_CROSS_FRONT,
+            MriType.TEST_2D_DEPTH,
+            MriType.TEST_2D_CROSS_SIDE,
+            MriType.TEST_2D_CROSS_FRONT
+        ]
         
         if mri_type == MriType.STRUCT_SCAN:
             file_name = f"{file_name}_{struct_scan}"
@@ -424,7 +475,7 @@ class DataHandler:
         elif mri_type == MriType.ANNOTATED_REDUCED:
             file_name = f"{file_name}_segm_cut"
             
-        elif mri_type == MriType.TRAIN_2D or mri_type == MriType.VAL_2D or MriType.TRAIN_2D_CROSS or MriType.VAL_2D_CROSS:
+        elif mri_type in modelling_dataset:
             if struct_scan is not None:
                 file_name = f"{subj_id}_11_{struct_scan}_{file_no}"
             else:
@@ -457,17 +508,32 @@ class DataHandler:
         elif mri_type == MriType.ANNOTATED_REDUCED:
             return os.path.join(self.data_dir, IMAGES_ANNOT_REDUCED_FNAME)
 
-        elif mri_type == MriType.TRAIN_2D:
-            return os.path.join(dir_2d_slices, IMAGES_TRAIN_2D_FNAME)
+        elif mri_type == MriType.TRAIN_2D_DEPTH:
+            return os.path.join(dir_2d_slices, IMAGES_TRAIN_DEPTH_FNAME)
 
-        elif mri_type == MriType.VAL_2D:
-            return os.path.join(dir_2d_slices, IMAGES_VAL_2D_FNAME)
-
-        elif mri_type == MriType.TRAIN_2D_CROSS:
-            return os.path.join(dir_2d_slices, IMAGES_TRAIN_2D_CROSS_FNAME)
+        elif mri_type == MriType.VAL_2D_DEPTH:
+            return os.path.join(dir_2d_slices, IMAGES_VAL_DEPTH_FNAME)
         
-        elif mri_type == MriType.VAL_2D_CROSS:
-            return os.path.join(dir_2d_slices, IMAGES_VAL_2D_CROSS_FNAME)
+        elif mri_type == MriType.TEST_2D_DEPTH:
+            return os.path.join(dir_2d_slices, IMAGES_TEST_DEPTH_FNAME)
+
+        elif mri_type == MriType.TRAIN_2D_CROSS_SIDE:
+            return os.path.join(dir_2d_slices, IMAGES_TRAIN_CROSS_SIDE_FNAME)
+        
+        elif mri_type == MriType.VAL_2D_CROSS_SIDE:
+            return os.path.join(dir_2d_slices, IMAGES_VAL_CROSS_SIDE_FNAME)
+        
+        elif mri_type == MriType.TEST_2D_CROSS_SIDE:
+            return os.path.join(dir_2d_slices, IMAGES_TEST_CROSS_SIDE_FNAME)
+        
+        elif mri_type == MriType.TRAIN_2D_CROSS_FRONT:
+            return os.path.join(dir_2d_slices, IMAGES_TRAIN_CROSS_FRONT_FNAME)
+        
+        elif mri_type == MriType.VAL_2D_CROSS_FRONT:
+            return os.path.join(dir_2d_slices, IMAGES_VAL_CROSS_FRONT_FNAME)
+        
+        elif mri_type == MriType.TEST_2D_CROSS_FRONT:
+            return os.path.join(dir_2d_slices, IMAGES_TEST_CROSS_FRONT_FNAME)
         
     def _get_blob_extension(self, file_path):
         suffix = os.path.splitext(file_path)

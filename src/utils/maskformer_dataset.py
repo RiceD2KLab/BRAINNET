@@ -38,7 +38,7 @@ class MaskformerMRIDataset(Dataset):
         Args:
             dataset
         """
-        # example valid types: MriType.TRAIN_2D, MriType.VAL_2D, MriType.TRAIN_2d_CROSS and  MriType.VAL_2D_CROSS
+        # Valid types: MriType.TRAIN_2D_DEPTH, MriType.VAL_2D_DEPTH, TEST_2D_DEPTH etc.
         self.mri_type = data_identifier
 
         self.processor = processor
