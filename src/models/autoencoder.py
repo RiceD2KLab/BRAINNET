@@ -6,6 +6,7 @@
 ###############################################################################
 import torch
 import torch.nn as nn
+from livelossplot import PlotLosses
 
 
 class Autoencoder(nn.Module):
@@ -83,6 +84,10 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
 
     Returns a fitted model
     """
+    # instantiate a livelossplot PlotLosses class
+    liveloss = PlotLosses()
+    loss_train = []
+
     # specify the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -90,8 +95,19 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     model.to(device)
     loss_fn.to(device)
 
+    # set the model to train
+    model.train()
+
     # enter the training loop
     for epoch in range(nepochs):
+
+        # create an empty dictionary for the loss logs
+        logs = {}
+
+        # track running loss and batch size
+        running_loss = 0.0
+        num_samples = 0
+
         for batch in dataloader:
             # move batch to device
             batch_current = batch["vol"].to(device, dtype=torch.float)
@@ -109,8 +125,23 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
             loss.backward()
             optimizer.step()
 
-        # print the status
-        print(f"Epoch {epoch + 1}/{nepochs} - Loss: {loss.item()}")
+            # capture current running loss and batch size
+            batch_size = batch["vol"].size(0)
+            #running_loss += loss.item()
+            running_loss += loss.detach() * batch_size
+            num_samples += batch_size
+            #loss_train_curr = running_loss / num_samples
+
+        # record loss at end of epoch
+        epoch_loss = running_loss / num_samples
+        logs['loss'] = epoch_loss.item()
+        loss_train.append(epoch_loss)
+        #logs['loss'] = loss_train_curr
+        #loss_train.append(loss_train_curr)
+
+        # update the loss plot
+        liveloss.update(logs)
+        liveloss.send()
 
     # save the model
     if outpath:
