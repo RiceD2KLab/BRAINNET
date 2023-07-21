@@ -6,6 +6,13 @@ from PIL import Image
 
 class MRIPlotter:
 
+    def set_axis_config(self, axs_element):
+        axs_element.tick_params(axis='x', labelsize=18)
+        axs_element.tick_params(axis='y', labelsize=18)  
+        axs_element.title.set_fontsize(18)
+        axs_element.yaxis.label.set_size(18)
+        axs_element.xaxis.label.set_size(18)
+
     def plot_img(self, img_data, fig, axs, row, col, title=None, cmap=None, alpha=None, colorbar=False, **kwargs):
         '''
         Ensures common parameters for all MRI plots
@@ -25,13 +32,13 @@ class MRIPlotter:
         img = axs_element.imshow(display_data, cmap=cmap, alpha=alpha, aspect='equal', **kwargs)
         
         if title:
-            axs_element.set_title(title, fontsize=15)
+            axs_element.set_title(title)
             
         if colorbar:
             fig.colorbar(img, ax=axs_element, fraction=0.05)
           
-        axs_element.tick_params(axis='x', labelsize=14)
-        axs_element.tick_params(axis='y', labelsize=14)    
+        self.set_axis_config(axs_element)
+          
         axs_element.set_xlabel("pixels")
         axs_element.set_ylabel("pixels")
         

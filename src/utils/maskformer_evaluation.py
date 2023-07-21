@@ -10,7 +10,9 @@ from typing import List
 import utils.maskformer_utils as mf_utils
 import utils.metrics as metrics
 import utils.mri_common as mri_common
-from utils.data_handler import DataHandler, MriType
+
+from utils.mri_plotter import MRIPlotter
+from utils.data_handler import DataHandler
 from utils.metrics import MetricName
 from utils.maskformer_inference import MaskFormerInference
 
@@ -19,7 +21,8 @@ class MaskFormerEvaluation():
     def __init__(self, use_brats_region=False):
         self.use_brats_region = use_brats_region
         self.all_label_colors = list(mri_common.SEGMENT_COLORS.values())
-            
+        self.mri_plt = MRIPlotter()
+        
         if self.use_brats_region:
             self.all_label_names = list(mri_common.BRATS_REGIONS.keys())
         else:
@@ -113,7 +116,7 @@ class MaskFormerEvaluation():
         nrows = 3
         ncols = 2
 
-        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12))
+        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(18, 20))
 
         count = 0
         for metric_name, metric_scores in metrics_dict.items():
@@ -130,14 +133,15 @@ class MaskFormerEvaluation():
 
             count+=1
             ax.grid(True)
-
+            self.mri_plt.set_axis_config(ax)
+            
         plt.show()
         
     def build_histogram(self, metrics_dict):
         nrows = 3
         ncols = 2
 
-        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 14))
+        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(18, 20))
 
         count = 0
 
@@ -156,6 +160,9 @@ class MaskFormerEvaluation():
             ax.set_xlabel(metric_name)
             ax.set_ylabel('count')
             ax.grid(True)
+            
+            self.mri_plt.set_axis_config(ax)
+            
             count+=1
             
         plt.show()
