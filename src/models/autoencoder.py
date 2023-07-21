@@ -127,17 +127,13 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
 
             # capture current running loss and batch size
             batch_size = batch["vol"].size(0)
-            #running_loss += loss.item()
             running_loss += loss.detach() * batch_size
             num_samples += batch_size
-            #loss_train_curr = running_loss / num_samples
 
         # record loss at end of epoch
         epoch_loss = running_loss / num_samples
         logs['loss'] = epoch_loss.item()
         loss_train.append(epoch_loss)
-        #logs['loss'] = loss_train_curr
-        #loss_train.append(loss_train_curr)
 
         # update the loss plot
         liveloss.update(logs)
