@@ -4,6 +4,7 @@
 # compresses them down into three feature maps without changing the
 # spatial dimensions.
 ###############################################################################
+import os
 import torch
 import torch.nn as nn
 from livelossplot import PlotLosses
@@ -70,7 +71,7 @@ class Autoencoder(nn.Module):
         return decoded
 
 
-def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100, outpath=None):
+def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100, name='model', checkpoint=True, chkpt_path='/content/models/checkpoints/', best_path='/content/models/best/'):
     """
     Implements a custom training loop for the autoencoder
 
@@ -80,10 +81,19 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         optimizer - an instance of a PyTorch optimizer class
         dataloader - an instance of a Dataloader class for AutoencoderMRIDataset class
         nepochs - number of epochs for training, default 100
-        outpath - string path for saving model
+        name - string name for saving model, ex: 'baseline_model'
+        checkpoint - boolean indicating whether to checkpoint save
+        chkpt_path - string for saving model checkpoints
+        best_path - string for saving current best model
 
     Returns a fitted model
     """
+    # check whether save paths exist, create them if not
+    if not os.path.exists(chkpt_path):
+        os.makedirs(chkpt_path)
+    if not os.path.exists(best_path):
+        os.makedirs(best_path)
+
     # instantiate a livelossplot PlotLosses class
     liveloss = PlotLosses()
     loss_train = []
@@ -97,6 +107,9 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
 
     # set the model to train
     model.train()
+
+    # set a min loss value for checkpoint saving
+    min_loss = 1e9
 
     # enter the training loop
     for epoch in range(1, nepochs + 1):
@@ -139,9 +152,17 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         liveloss.update(logs)
         liveloss.send()
 
-    # save the model
-    if outpath:
-        torch.save(model.state_dict(), outpath)
+        # check-point save every 50 epochs
+        if checkpoint and epoch % 50 == 0:
+            outname = f"{name}_checkpoint_epoch_{epoch}.pt"
+            torch.save(model.state_dict(), os.path.join(chkpt_path, outname))
+
+        # update min_loss and save if current best after nepochs // 2
+        if epoch_loss < min_loss:
+            min_loss = epoch_loss
+            if epoch > nepochs // 2:
+                outname = f"{name}_current_best_epoch_{epoch}.pt"
+                torch.save(model.state_dict(), os.path.join(best_path, outname))
 
 
 def normalize_channels(mri_tensor):
