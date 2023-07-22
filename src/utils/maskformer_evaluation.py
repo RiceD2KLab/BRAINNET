@@ -39,7 +39,7 @@ class MaskFormerEvaluation():
         metrics_summary = {}
         
         if recalculate:
-                all_dice, all_hd95, all_common_metrics, error_files = self._predict_and_calc_metrics(subj_selected=subj_names, mf_inference=mf_inference)
+                all_dice, all_hd95, all_common_metrics, error_files = self.predict_and_calc_metrics(subj_selected=subj_names, mf_inference=mf_inference)
 
                 print("Files with error:", error_files)
 
@@ -90,6 +90,62 @@ class MaskFormerEvaluation():
         
         return metrics_summary["scores"], metrics_summary["error_files"], metrics_summary["success_files"]
 
+    
+    def predict_and_calc_metrics(self, subj_selected: List[str], mf_inference: MaskFormerInference):
+        all_dice = []
+        all_hd95 = []
+        all_common_metrics = []
+        error_files = []
+        mask_true_3d, mask_pred_3d = None, None
+
+        for subj_id in subj_selected:
+
+            # perform inference for each slice within the volume
+            orig_img, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels = mf_inference.predict_patient_mask(subj_id=subj_id)
+            
+            # since prediction range is from 0 to 255, convert data back to binary
+            mask_pred_3d_binary = mf_utils.descale_mask(mask_pred_3d)
+            mask_true_3d_binary = mf_utils.descale_mask(mask_true_3d)
+            
+            if self.use_brats_region:
+                mask_pred_3d_binary = mf_utils.to_brats_mask(mask_pred_3d)
+                mask_true_3d_binary = mf_utils.to_brats_mask(mask_true_3d)
+            
+            try:
+                print("Calculating metrics for ", subj_id)
+                # dice coefficient
+                # output array of dice score for all segments: [0.9, 0.8, 0.92, 0.3]
+                dice_score = self._calc_metric_all_segments(self.all_label_names, metrics.calc_dice_score, mask_pred_3d_binary, mask_true_3d_binary)
+
+                # 95% hausdorff distance
+                # output array of hd95 for all segments: [5.3, 2.8, 3.92, 1]
+                hausdorff_val = self._calc_metric_all_segments(self.all_label_names, metrics.calc_hausdorff_95, mask_pred_3d_binary, mask_true_3d_binary)
+
+                # common metrics
+                # e.g. 'true_positive': [20927582, 148267, 687623, 226880]
+                common_metrics = self._calc_metric_all_segments(self.all_label_names, metrics.calc_binary_metrics, mask_pred_3d_binary, mask_true_3d_binary)
+                common_metrics_dict = {}
+                for key in common_metrics[0]:
+                    common_metrics_dict[key] = [metric[key] for metric in common_metrics]
+
+                # append only when there is no error
+                all_dice.append(dice_score)
+                all_hd95.append(hausdorff_val)
+                all_common_metrics.append(common_metrics_dict)
+
+            except Exception as ex:
+                print(f"Error {subj_id}", ex)
+                error_files.append(subj_id)
+
+        return  (all_dice, all_hd95, 
+                 all_common_metrics, 
+                 error_files, 
+                 orig_img, 
+                 mask_true_3d, 
+                 mask_pred_3d, 
+                 all_true_labels, 
+                 all_pred_labels)
+        
     def get_mean_scores(self, metrics_dict):
         metric_names = [
             MetricName.DICE_SCORE.value,
@@ -257,55 +313,6 @@ class MaskFormerEvaluation():
             pred_mask_cur = mask_pred_3d[label_idx,:,:,:].squeeze()
             result = metric_func(pred_mask_cur, true_mask_cur)
             results.append(result)
-        return results                 
-
-    def _predict_and_calc_metrics(self, subj_selected: List[str], mf_inference: MaskFormerInference):
-        all_dice = []
-        all_hd95 = []
-        all_common_metrics = []
-        error_files = []
-        mask_true_3d, mask_pred_3d = None, None
-
-        for subj_id in subj_selected:
-
-            # perform inference for each slice within the volume
-            mask_3d_pred_results = mf_inference.predict_patient_mask(subj_id=subj_id)
-            mask_true_3d, mask_pred_3d = mask_3d_pred_results[1], mask_3d_pred_results[2]
-            
-            # since prediction range is from 0 to 255, convert data back to binary
-            mask_pred_3d_binary = mf_utils.descale_mask(mask_pred_3d)
-            mask_true_3d_binary = mf_utils.descale_mask(mask_true_3d)
-            
-            if self.use_brats_region:
-                mask_pred_3d_binary = mf_utils.to_brats_mask(mask_pred_3d)
-                mask_true_3d_binary = mf_utils.to_brats_mask(mask_true_3d)
-            
-            try:
-                print("Calculating metrics for ", subj_id)
-                # dice coefficient
-                # output array of dice score for all segments: [0.9, 0.8, 0.92, 0.3]
-                dice_score = self._calc_metric_all_segments(self.all_label_names, metrics.calc_dice_score, mask_pred_3d_binary, mask_true_3d_binary)
-
-                # 95% hausdorff distance
-                # output array of hd95 for all segments: [5.3, 2.8, 3.92, 1]
-                hausdorff_val = self._calc_metric_all_segments(self.all_label_names, metrics.calc_hausdorff_95, mask_pred_3d_binary, mask_true_3d_binary)
-
-                # common metrics
-                # e.g. 'true_positive': [20927582, 148267, 687623, 226880]
-                common_metrics = self._calc_metric_all_segments(self.all_label_names, metrics.calc_binary_metrics, mask_pred_3d_binary, mask_true_3d_binary)
-                common_metrics_dict = {}
-                for key in common_metrics[0]:
-                    common_metrics_dict[key] = [metric[key] for metric in common_metrics]
-
-                # append only when there is no error
-                all_dice.append(dice_score)
-                all_hd95.append(hausdorff_val)
-                all_common_metrics.append(common_metrics_dict)
-
-            except Exception as ex:
-                print(f"Error {subj_id}", ex)
-                error_files.append(subj_id)
-
-        return  all_dice, all_hd95, all_common_metrics, error_files
+        return results
     
     
