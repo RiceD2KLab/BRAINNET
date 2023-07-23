@@ -11,47 +11,79 @@ from livelossplot import PlotLosses
 
 
 class Autoencoder(nn.Module):
-    def __init__(self, input_nchannels=4):
+    def __init__(self, input_nchannels=4, version=None):
         """
         Defines an autoencoder object that learns a compressed
         representation of the 4 MRI structural scans down to
         3 feature maps, without changing spatial dimensions
+
+        inputs:
+            input_nchannels - integer, default is 4, expects 4
+            version - string, default is None for baseline, 'v1' for other
         """
         super(Autoencoder, self).__init__()
         assert input_nchannels == 4, "Expected number of input channels is 4"
         self.input_nch = 4
+        self.version = version
 
-        # implement encoder
-        # Input 4 channels --> Latent Space 3 channels
-        # with same spatial dimensions
-        self.encoder = nn.Sequential(
-            nn.Conv3d(
-                in_channels=self.input_nch,
-                out_channels=3,
-                kernel_size=1,
-                stride=1,
-                padding="same"
-            ),
-            nn.ReLU()
-        )
+        # check whether to use baseline or different version
+        if not self.version:
+            # implement baseline model
+            # implement encoder
+            # Input 4 channels --> Latent Space 3 channels
+            # with same spatial dimensions
+            self.encoder = nn.Sequential(
+                nn.Conv3d(
+                    in_channels=self.input_nch,
+                    out_channels=3,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU()
+            )
 
-        # implement decoder
-        # Latent Space 3 channels --> Output 4 channels
-        # with same spatial dimensions as input
-        self.decoder = nn.Sequential(
-            nn.ConvTranspose3d(
-                in_channels=3,
-                out_channels=self.input_nch,
-                kernel_size=1,
-                stride=1,
-                padding=0
-            ),
-            nn.Sigmoid()
-        )
+            # implement decoder
+            # Latent Space 3 channels --> Output 4 channels
+            # with same spatial dimensions as input
+            self.decoder = nn.Sequential(
+                nn.ConvTranspose3d(
+                    in_channels=3,
+                    out_channels=self.input_nch,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                ),
+                nn.Sigmoid()
+            )
+        elif self.version == 'v1':
+            # implement version 1 that is the same as baseline
+            # but does not include sigmoid activation in decoder output
+            # encoder
+            self.encoder = nn.Sequential(
+                nn.Conv3d(
+                    in_channels=self.input_nch,
+                    out_channels=3,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU()
+            )
+
+            # decoder
+            self.decoder = nn.Sequential(
+                nn.ConvTranspose3d(
+                    in_channels=3,
+                    out_channels=self.input_nch,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                )
+            )
 
         # initialize parameters
         self.reset_parameters()
-
 
     def reset_parameters(self):
         for module in self.modules():
