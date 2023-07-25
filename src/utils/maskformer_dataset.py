@@ -101,6 +101,7 @@ class MaskformerMRIDataset(Dataset):
         mapping_dict[0] = 0
         mapping_dict[1] = 1
         mapping_dict[2] = 2
+        mapping_dict[3] = 3
         mapping_dict[4] = 3
         # mapping_dict[4] = 4
 
