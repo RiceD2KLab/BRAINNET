@@ -1,5 +1,5 @@
 '''Common functions used by maskformer (segmentation)'''
-
+import cv2
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -179,3 +179,26 @@ def plot_segmentation_comparison(input_pixel_values, input_segmentation, pred_se
 
     plt.tight_layout()
     plt.show()
+
+def resize_mask(mask, original_size):
+    # Note: cv2.resize expects the size in (width, height) format
+    original_size = (original_size[1], original_size[0])  # Switching from HxW to WxH
+
+    # Check if mask has multiple channels
+    if len(mask.shape) > 2:
+        # Create a list to store each resized channel
+        resized_mask_channels = []
+
+        # Loop over each channel in the mask
+        for channel in mask:
+            # Resize the channel and append to the list
+            resized_mask_channel = cv2.resize(channel, original_size, interpolation=cv2.INTER_NEAREST)
+            resized_mask_channels.append(resized_mask_channel)
+
+        # Stack the resized channels back into a single mask
+        resized_mask = np.stack(resized_mask_channels, axis=0)
+    else:
+        # If mask has only one channel, just resize it
+        resized_mask = cv2.resize(mask, original_size, interpolation=cv2.INTER_NEAREST)
+
+    return resized_mask
