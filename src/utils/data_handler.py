@@ -480,9 +480,9 @@ class DataHandler:
             
         elif mri_type in modelling_dataset:
             if struct_scan is not None:
-                file_name = f"{subj_id}_11_{struct_scan}_{file_no}"
+                file_name = f"{file_name}_11_{struct_scan}_{file_no}"
             else:
-                file_name = f"{subj_id}_11_segm_{file_no}"
+                file_name = f"{file_name}_11_segm_{file_no}"
             
         file_name = f"{file_name}.nii.gz"
         f_path = os.path.join(file_dir, file_name)
