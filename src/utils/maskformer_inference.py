@@ -68,18 +68,12 @@ class MaskFormerInference():
         first_img =  batch["pixel_values"][0]
         target_size = transforms.ToPILImage()(first_img).size[::-1]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(device)
-        self.model.eval()
         
-        with torch.no_grad():
-            outputs = self.model(
-                            pixel_values=batch["pixel_values"].to(device),
-                            mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
-                            class_labels=[labels.to(device) for labels in batch["class_labels"]],
-                    )
-            
-            torch.cuda.empty_cache()
-            
+        outputs = self.model(
+                        pixel_values=batch["pixel_values"].to(device),
+                        mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
+                        class_labels=[labels.to(device) for labels in batch["class_labels"]],
+                )
         # post-processing/inference
         results=self.processor.post_process_instance_segmentation(outputs, target_sizes=[target_size])[0]
         return results
@@ -119,12 +113,11 @@ class MaskFormerInference():
         # perform prediction
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
-
         self.model.eval()
-        for ibatch, batch in enumerate(dataloader):
+        
+        with torch.no_grad():
             
-            with torch.no_grad():
-
+            for ibatch, batch in enumerate(dataloader):
                 # get first item in batch where batch size = 1
                 image_cur = batch["pixel_values"][0]
                 image_3d[ibatch, :, :, :] = image_cur.numpy()
@@ -148,7 +141,6 @@ class MaskFormerInference():
 
                 all_true_labels = list(set(all_true_labels + true_class_labels.tolist()))
                 all_pred_labels = list(set(all_pred_labels + pred_class_labels))
-        
-            torch.cuda.empty_cache()
-
+   
+        torch.cuda.empty_cache()
         return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels

@@ -92,7 +92,7 @@ class MaskformerMRIDataset(Dataset):
         image[:,:,2] = data_cur * 255
 
         # load segm file
-        data_cur = self.data_handler.load_mri(subj_id = subj_no, file_no=file_no, mri_type = self.mri_type, dtype="uint8")
+        data_cur = self.data_handler.load_mri(subj_id = subj_no, file_no=file_no, mri_type = self.mri_type, dtype=np.uint8)
         instance_seg =  np.zeros( (n_h, n_w), dtype=np.uint8)
         instance_seg[:,:] = data_cur
         # print(instance_seg.max())
@@ -101,10 +101,9 @@ class MaskformerMRIDataset(Dataset):
         mapping_dict[0] = 0
         mapping_dict[1] = 1
         mapping_dict[2] = 2
-        mapping_dict[3] = 3
         mapping_dict[4] = 3
         # mapping_dict[4] = 4
-
+        
         # Use NumPy's vectorize() function to apply the mapping function to each element in the original array
         class_id_map = np.vectorize(lambda x: mapping_dict[x])(instance_seg)
         class_labels = np.unique(class_id_map)

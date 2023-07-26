@@ -163,7 +163,7 @@ class DataHandler:
 
 
     def load_mri(self, subj_id: str, mri_type: MriType, file_no: int = None, struct_scan: Union[StructuralScan, None] = None, 
-                 img_dir: str = None, return_nifti: bool = False, dtype: str = None):
+                 img_dir: str = None, return_nifti: bool = False, dtype: Union[type, np.dtype, None] = None):
         """
         Read MRI data from the specified subject file.
 
@@ -202,17 +202,20 @@ class DataHandler:
             self.download_from_onedrive(mri_type=mri_type)
             nifti = nib.load(mri_file_path)
 
-      
-        # return uint if file is segmentation not specified
+        # return uint8 if image being loaded is not a Mri Structural Image
         if struct_scan is None and dtype is None:
-            dtype="uint"
-
+            dtype=np.uint8
+        
         # get array data
-        data = None
-        if dtype is not None:
-            data = (nifti.get_fdata()).astype(dtype)
-        else:
-            data = nifti.get_fdata()
+        data = nifti.get_fdata()
+        if dtype is not None:        
+            # BUG FIX: decimal bug on segments: [0 1.0000152587890625, 2.000030517578125 3.9999999990686774]
+            # if dtype is of type integer, eg. np.uint8, uint8, np.uint32 etc, round the data before converting to an integer
+            if np.issubdtype(dtype, np.integer):
+                data = np.round(data).astype(dtype)
+            else:
+                data = data.astype(dtype)
+        
         
         # delete temporary file
         if self.use_cloud:
@@ -457,23 +460,23 @@ class DataHandler:
         ]
         
         if mri_type == MriType.STRUCT_SCAN:
-            file_name = f"{file_name}_{struct_scan}"
-            file_dir = os.path.join(file_dir, subj_id)
+            file_name = f"{file_name}_11_{struct_scan}"
+            file_dir = os.path.join(file_dir, subj_id) + "_11"
         
         elif mri_type == MriType.AUTO_SEGMENTED: 
-            file_name = f"{file_name}_automated_approx_segm"
+            file_name = f"{file_name}_11_automated_approx_segm"
             
         elif mri_type == MriType.ANNOTATED:
-            file_name = f"{file_name}_segm"
+            file_name = f"{file_name}_11_segm"
         
         elif mri_type == MriType.STRUCT_SCAN_REDUCED:
-            file_name = f"{file_name}_{struct_scan}_cut"
+            file_name = f"{file_name}_11_{struct_scan}_cut"
             
         elif mri_type == MriType.AUTO_SEGMENTED_REDUCED:
-            file_name = f"{file_name}_automated_approx_segm_cut"
+            file_name = f"{file_name}_11_automated_approx_segm_cut"
             
         elif mri_type == MriType.ANNOTATED_REDUCED:
-            file_name = f"{file_name}_segm_cut"
+            file_name = f"{file_name}_11_segm_cut"
             
         elif mri_type in modelling_dataset:
             if struct_scan is not None:

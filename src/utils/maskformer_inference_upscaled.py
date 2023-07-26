@@ -70,17 +70,12 @@ class MaskFormerInference_upscaled():
         first_img =  batch["pixel_values"][0]
         target_size = transforms.ToPILImage()(first_img).size[::-1]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(device)
-        self.model.eval()
         
-        with torch.no_grad():
-            outputs = self.model(
-                            pixel_values=batch["pixel_values"].to(device),
-                            mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
-                            class_labels=[labels.to(device) for labels in batch["class_labels"]],
-                    )
-            
-            torch.cuda.empty_cache()
+        outputs = self.model(
+                        pixel_values=batch["pixel_values"].to(device),
+                        mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
+                        class_labels=[labels.to(device) for labels in batch["class_labels"]],
+                )
             
         # post-processing/inference
         results=self.processor.post_process_instance_segmentation(outputs, target_sizes=[target_size])[0]
@@ -128,9 +123,8 @@ class MaskFormerInference_upscaled():
         self.model.to(device)
 
         self.model.eval()
-        for (ibatch, batch), (_, batch_upscale) in zip(enumerate(dataloader), enumerate(dataloader_upscale)):
-
-            with torch.no_grad():
+        with torch.no_grad():
+            for (ibatch, batch), (_, batch_upscale) in zip(enumerate(dataloader), enumerate(dataloader_upscale)):
 
                 # post-processing/segmentation inference
                 segm_result = self.predict_segm(batch_upscale)
@@ -153,6 +147,6 @@ class MaskFormerInference_upscaled():
                 all_true_labels = list(set(all_true_labels + true_class_labels.tolist()))
                 all_pred_labels = list(set(all_pred_labels + pred_class_labels))
         
-            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
 
         return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels
