@@ -92,17 +92,22 @@ class MaskFormerInference_upscaled():
         # get all slices for one patient or subj: expected is 146
         data_list = self.get_patient_slices(subj_id)  
 
-        # define dataset given provided list
+        # create two datasets: one with original transform, another with upscaled transform
         dataset = MaskformerMRIDataset(data_handler=self.data_handler, 
                                        data_identifier=self.data_identifier,
                                        data_list=data_list, processor=self.processor,
                                        transform=self.transform, augment=False)
+        dataset_upscale = MaskformerMRIDataset(data_handler=self.data_handler, 
+                                       data_identifier=self.data_identifier,
+                                       data_list=data_list, processor=self.processor,
+                                       transform=self.transform2, augment=False)
 
         # define data loader
         # TODO: review if batch_size is fixed
         batch_size = 1
-        dataloader = DataLoader(dataset, batch_size=batch_size,
-                                        shuffle=False, collate_fn=collate_fn)
+            
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+        dataloader_upscale = DataLoader(dataset_upscale, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         # initalize 3d variables using shape of first input
         first_img_shape = dataset[0]["pixel_values"].shape
@@ -123,22 +128,12 @@ class MaskFormerInference_upscaled():
         self.model.to(device)
 
         self.model.eval()
-        for ibatch, batch in enumerate(dataloader):
-            
+        for (ibatch, batch), (_, batch_upscale) in zip(enumerate(dataloader), enumerate(dataloader_upscale)):
+
             with torch.no_grad():
 
-                # get first item in batch where batch size = 1
-                image_cur = batch["pixel_values"][0].numpy()
-
-                # Apply the upscale transformation before prediction
-                transformed = self.transform2(image=image_cur.transpose((1, 2, 0)))
-                image_cur = transformed['image'].transpose((2, 0, 1))
-
-                # update batch with upscaled image
-                batch["pixel_values"][0] = torch.from_numpy(image_cur)
-
                 # post-processing/segmentation inference
-                segm_result = self.predict_segm(batch)
+                segm_result = self.predict_segm(batch_upscale)
                 
                 # e.g. (n, 512, 512) where n is the number of existing labels in the prediction
                 pred_mask_labels, pred_class_labels = get_mask_from_segm_result(segm_result=segm_result)
