@@ -40,7 +40,7 @@ def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
     # output is predicted mask with shape: (num_labels, height, width)
     return pred_mask_labels, pred_class_labels
     
-class MaskFormerInference():
+class MaskFormerInference_upscaled():
     '''Assumes that the data reside in one folder'''
     
     def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, transform: Compose, transform2: Compose = None, orig_dim: tuple = None):
