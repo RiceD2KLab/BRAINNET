@@ -5,9 +5,63 @@
 # spatial dimensions.
 ###############################################################################
 import os
+import numpy as np
 import torch
 import torch.nn as nn
 from livelossplot import PlotLosses
+
+
+class EarlyStopper:
+    """
+    Creates an EarlyStopper object which can be used to
+    cease training after a defined number of epochs without
+    training loss reduction
+
+    based on https://stackoverflow.com/a/73704579
+    """
+    def __init__(self, patience=1, min_delta=0.):
+        """
+        Creates an EarlyStopper object which can be used to
+        cease training after a defined number of epochs without
+        traning loss reduction
+
+        Inputs:
+            patience - int, default 1, number of epochs to stop training
+            without loss reduction
+
+            min_delta - float, default 0., threshold value for training loss
+        """
+        self.patience = patience
+        self.min_delta = min_delta
+        # tracks how many iterations have passed without improvement
+        self.counter = 0
+        self.min_loss = np.inf
+
+    def early_stop(self, loss):
+        """
+        helper function that compares current loss to global
+        minimum loss, and updates patience counter if current
+        loss is not less than global minimum loss. If the
+        patience counter threshold is exceeded, training is stopped
+
+        Inputs:
+            loss - float, current epoch training loss
+
+        Returns a boolean
+        """
+        if loss < self.min_loss:
+            # update min_loss
+            self.min_loss = loss
+            # reset the counter
+            self.counter = 0
+        elif loss > (self.min_loss + self.min_delta):
+            # the current loss is greater than the minimum
+            # plus a threshold criteria
+            # increment patience counter
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
 
 
 class Autoencoder(nn.Module):
@@ -82,6 +136,136 @@ class Autoencoder(nn.Module):
                 )
             )
 
+        elif self.version == 'v2':
+            # v2 encoder 4 --> 12 --> 24 -- > 3
+            # decoder 3 --> 24 --> 12 --> 4
+            # encoder
+            self.encoder = nn.Sequential(
+                nn.Conv3d(
+                    in_channels=self.input_nch,
+                    out_channels=12,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+                nn.Conv3d(
+                    in_channels=12,
+                    out_channels=24,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+                nn.Conv3d(
+                    in_channels=24,
+                    out_channels=3,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+            )
+            # decoder
+            self.decoder = nn.Sequential(
+                nn.ConvTranspose3d(
+                    in_channels=3,
+                    out_channels=24,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                ),
+                nn.ReLU(),
+                nn.ConvTranspose3d(
+                    in_channels=24,
+                    out_channels=12,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                ),
+                nn.ReLU(),
+                nn.ConvTranspose3d(
+                    in_channels=12,
+                    out_channels=self.input_nch,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                )
+            )
+
+        elif self.version == 'v3':
+            # v3 encoder 4 --> 12 --> 24 --> 48 --> 3
+            # decoder 3 --> 48 --> 24 --> 12 --> 4
+            # encoder
+            self.encoder = nn.Sequential(
+                nn.Conv3d(
+                    in_channels=self.input_nch,
+                    out_channels=12,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+                nn.Conv3d(
+                    in_channels=12,
+                    out_channels=24,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+                nn.Conv3d(
+                    in_channels=24,
+                    out_channels=72,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+                nn.Conv3d(
+                    in_channels=72,
+                    out_channels=3,
+                    kernel_size=1,
+                    stride=1,
+                    padding="same"
+                ),
+                nn.ReLU(),
+            )
+            # decoder
+            self.decoder = nn.Sequential(
+                nn.ConvTranspose3d(
+                    in_channels=3,
+                    out_channels=72,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                ),
+                nn.ReLU(),
+                nn.ConvTranspose3d(
+                    in_channels=72,
+                    out_channels=24,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                ),
+                nn.ReLU(),
+                nn.ConvTranspose3d(
+                    in_channels=24,
+                    out_channels=12,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                ),
+                nn.ReLU(),
+                nn.ConvTranspose3d(
+                    in_channels=12,
+                    out_channels=self.input_nch,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0
+                )
+            )
+
         # initialize parameters
         self.reset_parameters()
 
@@ -103,7 +287,7 @@ class Autoencoder(nn.Module):
         return decoded
 
 
-def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100, name='model', checkpoint=True, chkpt_path='/content/models/checkpoints/', best_path='/content/models/best/'):
+def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100, early_stopping=False, patience=10, min_delta=1e-4, name='model', checkpoint=True, chkpt_path='/content/models/checkpoints/', best_path='/content/models/best/'):
     """
     Implements a custom training loop for the autoencoder
 
@@ -113,6 +297,9 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         optimizer - an instance of a PyTorch optimizer class
         dataloader - an instance of a Dataloader class for AutoencoderMRIDataset class
         nepochs - number of epochs for training, default 100
+        early_stopping - boolean, default False
+        patience - int, default 10, number of epochs without training loss reduction to stop training
+        min_delta - float, default 1e-4, threshold tolerance training loss in early stopping
         name - string name for saving model, ex: 'baseline_model'
         checkpoint - boolean indicating whether to checkpoint save
         chkpt_path - string for saving model checkpoints
@@ -142,6 +329,10 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
 
     # set a min loss value for checkpoint saving
     min_loss = 1e9
+
+    # instantiate an EarlyStopper object, if specified
+    if early_stopping:
+        early_stopper = EarlyStopper(patience=patience, min_delta=min_delta)
 
     # enter the training loop
     for epoch in range(1, nepochs + 1):
@@ -184,17 +375,23 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         liveloss.update(logs)
         liveloss.send()
 
-        # check-point save every 50 epochs
-        if checkpoint and epoch % 50 == 0:
+        # check-point save every 10 epochs
+        if checkpoint and epoch % 10 == 0:
             outname = f"{name}_checkpoint_epoch_{epoch}.pt"
             torch.save(model.state_dict(), os.path.join(chkpt_path, outname))
 
         # update min_loss and save if current best after nepochs // 2
         if epoch_loss < min_loss:
             min_loss = epoch_loss
-            if epoch > nepochs // 2:
+            if epoch > nepochs // 4:
                 outname = f"{name}_current_best_epoch_{epoch}.pt"
                 torch.save(model.state_dict(), os.path.join(best_path, outname))
+
+        # check whether to stop training early
+        if early_stopping:
+            if early_stopper.early_stop(epoch_loss):
+                print(f"Stopping early at epoch {epoch}")
+                break
 
 
 def normalize_channels(mri_tensor):
