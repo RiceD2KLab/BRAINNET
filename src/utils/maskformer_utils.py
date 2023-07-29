@@ -92,7 +92,6 @@ def get_subj_ids(subj_files):
     return subj_ids
 
 def get_subset_files(subj_files, file_no_min, file_no_max, subj_id_min, subj_id_max):
-    
     subj_ids = get_subj_ids(subj_files)
     # filter files within range
     subj_filenames = []
@@ -110,8 +109,9 @@ def get_subset_files(subj_files, file_no_min, file_no_max, subj_id_min, subj_id_
             # item has to be unique
             if subj_filename not in subj_filenames:
                 subj_filenames.append(subj_filename)
-    subj_filenames.sort()
-    return subj_filenames
+    
+    subj_sorted = sorted(subj_filenames, key=_extract_numeric_part)
+    return subj_sorted
 
 def get_all_subj_ids(data_handler: DataHandler, mri_type: MriType):
     # Obtain full  dataset
@@ -202,3 +202,14 @@ def resize_mask(mask, original_size):
         resized_mask = cv2.resize(mask, original_size, interpolation=cv2.INTER_NEAREST)
 
     return resized_mask
+
+def _extract_numeric_part(filename):
+    # Expected filename: "UPENN-GBM-00131_50.nii.gz"
+    # Split the filename based on underscore
+    
+    parts = filename.split('_')
+    if len(parts) == 2:
+        prefix = parts[0]
+        numeric_part = int(parts[1].split('.')[0])
+        return prefix, numeric_part
+    return filename, -1  # Return the original filename if the format is not as expected

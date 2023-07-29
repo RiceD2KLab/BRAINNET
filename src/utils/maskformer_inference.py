@@ -49,7 +49,6 @@ class MaskFormerInference():
         self.processor = processor
         self.transform = transform
         self.data_identifier = data_identifier
-    
         # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
         all_files_in_dir = self.data_handler.list_mri_in_dir(mri_type=data_identifier)
         
@@ -65,19 +64,14 @@ class MaskFormerInference():
         return vol_list_sorted
         
     def predict_segm(self, batch):
-        first_img =  batch["pixel_values"][0]
-        target_size = transforms.ToPILImage()(first_img).size[::-1]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-        outputs = self.model(
-                        pixel_values=batch["pixel_values"].to(device),
-                        mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
-                        class_labels=[labels.to(device) for labels in batch["class_labels"]],
-                )
-        # post-processing/inference
-        results=self.processor.post_process_instance_segmentation(outputs, target_sizes=[target_size])[0]
-        return results
-    
+        self.model.to(device)
+        self.model.eval()
+        with torch.no_grad():
+            model_outputs, results = self._predict_segm(batch)
+        torch.cuda.empty_cache()
+        return model_outputs, results
+
     def predict_patient_mask(self, subj_id: str):
         
         print("Performing inference on", subj_id)
@@ -123,7 +117,7 @@ class MaskFormerInference():
                 image_3d[ibatch, :, :, :] = image_cur.numpy()
 
                 # post-processing/segmentation inference
-                segm_result = self.predict_segm(batch)
+                model_outputs, segm_result = self._predict_segm(batch)
                 
                 # e.g. (n, 512, 512) where n is the number of existing labels in the prediction
                 pred_mask_labels, pred_class_labels = get_mask_from_segm_result(segm_result=segm_result)
@@ -144,3 +138,19 @@ class MaskFormerInference():
    
         torch.cuda.empty_cache()
         return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels
+        
+    def _predict_segm(self, batch):
+        # Note: this will only work if batch_size = 1
+        first_img =  batch["pixel_values"][0]
+        target_size = transforms.ToPILImage()(first_img).size[::-1]
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        outputs = self.model(
+                        pixel_values=batch["pixel_values"].to(device),
+                        mask_labels=[labels.to(device) for labels in batch["mask_labels"]],
+                        class_labels=[labels.to(device) for labels in batch["class_labels"]],
+                )
+        # post-processing/inference
+        results=self.processor.post_process_instance_segmentation(outputs, target_sizes=[target_size])[0]
+        return outputs, results
+    
