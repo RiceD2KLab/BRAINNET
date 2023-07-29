@@ -35,34 +35,38 @@ IMAGES_AUTO_SEGM_FNAME = "automated_segm"
 IMAGES_AUTO_SEGM_REDUCED_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXwqKvC8QpBBjFQUXzKR1-IBtJeP1hwXUQAoJOneJx4-Hw"
 IMAGES_AUTO_SEGM_REDUCED_FNAME = "automated_segm_reduced"
 
+# annot reduced normalized
+IMAGES_ANNOT_REDUCED_NORM_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EccpxJhE8T5BgDkvbgUr6kIBPG0Nx9dneBeaqPPZ0YlZhw"
+IMAGES_ANNOT_REDUCED_NORM_FNAME = "images_annot_reduced_norm"
+
 # 2d slices depth direction
-IMAGES_TRAIN_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ETxkBw8cJS9InmWhUUFx0l0BnAES2uSbCaLn0jrMi-HK3Q"
+IMAGES_TRAIN_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWo-2IfjoUNImdWqJxc2iywBE1_8q8kVZHIhd9eOFv1wFg"
 IMAGES_TRAIN_DEPTH_FNAME = "train_2d"
  
-IMAGES_VAL_DEPTH_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeLd0vd4IuxBn5hPlzO8gz0BT2kDX9Uo9AkNqxR_sjKbMg"
+IMAGES_VAL_DEPTH_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ERKhTBiFCUlBpn2L5aG2-CkBMDIJBnLZhzqjkpJeFOIQVQ"
 IMAGES_VAL_DEPTH_FNAME = "val_2d" 
 
-IMAGES_TEST_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/Ea_s6aJW5PxOr4EkayzPUwwB9wm1W52yPAG6x6gpfbVVig?e=U1lloh"
+IMAGES_TEST_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeMV2GRSQWdPkQpDmQouC8gBGqGAFahtyiZFCdrkHoIk1w"
 IMAGES_TEST_DEPTH_FNAME = "test_2d_depth"
 
 # 2d slices cross-side direction
-IMAGES_TRAIN_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWnXLCwsONBNpzziTciJXt4B68qkcVfZTfSXRcS9gxWWGQ?e=r5xDU4"
+IMAGES_TRAIN_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeYmGZIuupROvu0xpljaJBsBueQcPuMC_sM8nzwdYDcrMg"
 IMAGES_TRAIN_CROSS_SIDE_FNAME = "train_2d_cross"
  
-IMAGES_VAL_CROSS_SIDE_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EdKtKyMfy2lJvdGGSSz23yEB34_C4MiEm2BmRE9q451Lgg?e=9dK2NO"
+IMAGES_VAL_CROSS_SIDE_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ERS3vGnRyPpLoiN-PLDUaTQBuGvbv9RaV-Xs-UYNmz6GWA"
 IMAGES_VAL_CROSS_SIDE_FNAME = "val_2d_cross" 
 
-IMAGES_TEST_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZUVF6SPoPxJhVGHTSHFKWQBt5cs9RgrUvi41uTrW_6JPg?e=VctJq9"
+IMAGES_TEST_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EcwJqz2sLttFs0Ujni4MjhkBSrxcOzHnOrbzCeiUXBeiTQ"
 IMAGES_TEST_CROSS_SIDE_FNAME = "test_2d_cross_side"
 
 # 2D slices cross-front direction
-IMAGES_TRAIN_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXlKRVj-rJVJqVvb9RheOMEBknchUFWfvYsgPG1oU_phfQ"
+IMAGES_TRAIN_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EQHcZZBwSw1CgFqvJnz2b7cBno-js9YMS_GcKl9jffaylg"
 IMAGES_TRAIN_CROSS_FRONT_FNAME = "train_2d_cross_front"
 
-IMAGES_VAL_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWkSF6l1fUdMjb6pIltemmQB9Kkc6tqrJbehbM5ruWYvpw?e=kNZru1"
+IMAGES_VAL_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZatriq7t2lHkrcc5s11IPoBcm2kDSAtXLuFvRQ1tLUOMA"
 IMAGES_VAL_CROSS_FRONT_FNAME = "val_2d_cross_front"
 
-IMAGES_TEST_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZqlm_4lGppMl65Sd0nJp7UBZ8YRq6PVRHTOKsWKV1GpTQ?e=IuTLvH"
+IMAGES_TEST_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ETeMow8TKc1BgdsdSBxSLPMBHT-Iq2pZN_OIcsp7HfcQwg"
 IMAGES_TEST_CROSS_FRONT_FNAME = "test_2d_cross_front"
 
 # All constants for destination directories
@@ -94,6 +98,7 @@ class MriType(Enum):
     TRAIN_2D_CROSS_FRONT = 13
     VAL_2D_CROSS_FRONT = 14
     TEST_2D_CROSS_FRONT = 15
+    ANNOTATED_REDUCED_NORM = 16
 
 class DataHandler:
     """
@@ -105,7 +110,7 @@ class DataHandler:
         1. Instantiate the class. Set use_cloud to False to use runtime instead of google storage. Note that the
         folder structure is consistent in google storage and in runtime.
 
-            data_handler = DataHandler(use_cloud=False)
+            data_handler = DataHandler()
     
     
         2. Reading MRI images:
@@ -117,7 +122,7 @@ class DataHandler:
                                 mri_type=MriType.AUTO_SEGMENTED)
                                 
             annotated_img = data_handler.load_mri(subj_id=subj_id,
-                                mri_type=MriType.ANNOTATED, dtype='uint8')                    
+                                mri_type=MriType.ANNOTATED, dtype=np.uint8)                    
         
         3. Save Text:
             data_handler.save_text(filename='filename.txt', data='this is my text')
@@ -163,14 +168,15 @@ class DataHandler:
 
 
     def load_mri(self, subj_id: str, mri_type: MriType, file_no: int = None, struct_scan: Union[StructuralScan, None] = None, 
-                 img_dir: str = None, return_nifti: bool = False, dtype: Union[type, np.dtype, None] = None):
+                 return_nifti: bool = False, dtype: Union[type, np.dtype, None] = None):
         """
         Read MRI data from the specified subject file.
 
         Args:
-            subj_file (str): The path or filename of the MRI subject file (eg. UPENN-GBM-00312_1)
+            subj_file (str): The path or filename of the MRI subject file (eg. UPENN-GBM-00312)
             mri_type (Mri_Type): The type of MRI data being read (e.g. annotated, autosegmented, reduced). Strictly use ENUM class for valid types
-            struct_scan (Struct_Scan): The type of structural scan to load (e.g T1, T2, T1GD, FLAIR). Strictly use ENUM class for valid structural scans
+            file_no (int): If loading 2d data, this is the slice number
+            struct_scan (Struct_Scan): Enum type forloading structural scan (e.g T1, T2, T1GD, FLAIR). Strictly use ENUM class for valid structural scans
             return_nifti (bool, optional): Flag indicating whether raw nifit. Defaults to False.
             dtype (str, optional): The data type of the MRI data e.g. uint16, uint8. If none, default is float.
 
@@ -181,33 +187,33 @@ class DataHandler:
         # initialize data
         destination_path = None
         nifti = None
+        
         # construct the full file path using a helper function
         mri_file_path = self._get_full_path(subj_id=subj_id, mri_type=mri_type, struct_scan=struct_scan, file_no=file_no)
        
-        # overwrite constructed file if img_dir is supplied
-        if img_dir is not None:
-            mri_file_path = img_dir
-             
-      
         if self.use_cloud:    
-            # google storage way
-            # create temp file path with same file format as file being downloaded
+            # if source is google storage
+            # create a local temp file path with same file format as file being downloaded
             destination_path = self.create_temp_file(mri_file_path)
             
+            # download the file into that local destination path
             self.google_client.download_blob_as_file(mri_file_path, destination_path)
             nifti = nib.load(destination_path)
 
         else:
-            # one drive way
+            # if source is one drive
+            # download and unzip if the files do not exist in the runtime yet
             self.download_from_onedrive(mri_type=mri_type)
+            
             nifti = nib.load(mri_file_path)
 
-        # return uint8 if image being loaded is not a Mri Structural Image
+        # return uint8 if image being loaded is a segmentation image
         if struct_scan is None and dtype is None:
             dtype=np.uint8
         
         # get array data
         data = nifti.get_fdata()
+        
         if dtype is not None:        
             # BUG FIX: decimal bug on segments: [0 1.0000152587890625, 2.000030517578125 3.9999999990686774]
             # if dtype is of type integer, eg. np.uint8, uint8, np.uint32 etc, round the data before converting to an integer
@@ -217,28 +223,29 @@ class DataHandler:
                 data = data.astype(dtype)
         
         
-        # delete temporary file
+        # delete temporary destination path after extracting nifti image
         if self.use_cloud:
             os.remove(destination_path)
         
         if return_nifti:
+            # return both nifti.get_fdata() and nifti
             return data, nifti
         else:
+            # return nifti.get_fdata() only
             return data
     
     def load_to_temp_file(self, file_name, train_dir_prefix = None, use_cloud=True):
         source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
         
         if self.use_cloud or use_cloud:   
-            # google storage way
-            # create temp file path with same file format as file being downloaded
+            # if source is google storage
+            # create a local temp file path with same file format as file being downloaded
             destination_path = self.create_temp_file(file_name)
             self.google_client.download_blob_as_file(source_path, destination_path)
             return destination_path
         else:
-            # no need to load if from local folder
+            # no need to load if from a local folder
             return source_path
-            
             
     def load_from_stream(self, file_name, train_dir_prefix = None, use_cloud=True):
         # load from training folder by default
@@ -330,19 +337,30 @@ class DataHandler:
         else:
             with open(destination_path, 'w') as file:
                 file.write(data)
-                
-    def list_dir(self, sort: bool=True, dir_prefix: str = "", absolute_dir: str = None):
+      
+    def list_dir(self, train_dir_prefix: str = "", absolute_dir: str = None, sort: bool=True, use_cloud=False):
+        """
+        List files in a directory
         
-        # Look within the TRAIN DIR by default
-        dir = os.path.join(self.train_dir, dir_prefix)
+        Args:
+            sort (str): The name of the file to be saved.
+            source_path (str): The path from which the file will be fetched.
+            train_dir_prefix (str, optional): Optional subfolder within the train directory
+            absolute_dir (str, optional): Optional prefix for TRAIN_DIR which will serve as base directory
+            use_cloud (bool, optional): A flag indicating whether the file should also be uploaded to the cloud.
+        """
         
+        # Look within the train dir by default
+        dir = os.path.join(self.train_dir, train_dir_prefix)
         if absolute_dir is not None:
             dir = absolute_dir
         
         all_files = []
-        if self.use_cloud:
+        if self.use_cloud or use_cloud:
+            # list files from google cloud
             all_files = self.google_client.list_blob_in_dir(dir)
         else:
+            # list files from local directory
             all_files = os.listdir(dir)
         
         if sort:
@@ -431,7 +449,10 @@ class DataHandler:
                 
             elif mri_type == MriType.TEST_2D_CROSS_FRONT: 
                 download(IMAGES_TEST_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
-    
+
+            elif mri_type == MriType.ANNOTATED_REDUCED_NORM:
+                download(IMAGES_ANNOT_REDUCED_NORM_URL, filename=filename, unzip_path=dir_annot_reduced)
+
     
     def create_temp_file(self, file_path):
         # this will create a file in the commonly used temporary directory in Python 
@@ -483,6 +504,12 @@ class DataHandler:
                 file_name = f"{file_name}_11_{struct_scan}_{file_no}"
             else:
                 file_name = f"{file_name}_11_segm_{file_no}"
+                
+        elif mri_type == MriType.ANNOTATED_REDUCED_NORM:
+            if struct_scan is not None:
+                file_name = f"{file_name}_11_{struct_scan}"
+            else:
+                file_name = f"{file_name}_11_segm"
             
         file_name = f"{file_name}.nii.gz"
         f_path = os.path.join(file_dir, file_name)
@@ -537,6 +564,9 @@ class DataHandler:
         
         elif mri_type == MriType.TEST_2D_CROSS_FRONT:
             return os.path.join(dir_2d_slices, IMAGES_TEST_CROSS_FRONT_FNAME)
+        
+        elif mri_type == MriType.ANNOTATED_REDUCED_NORM:
+            return os.path.join(self.data_dir, IMAGES_ANNOT_REDUCED_NORM_FNAME)
         
     def _get_blob_extension(self, file_path):
         suffix = os.path.splitext(file_path)
