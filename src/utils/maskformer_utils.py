@@ -7,8 +7,8 @@ from typing import List
 
 # local imports
 import utils.mri_common as mri_common
-
 from utils.mri_plotter import MRIPlotter
+
 from utils.data_handler import DataHandler, MriType
 
 mri_plt = MRIPlotter()
@@ -26,10 +26,6 @@ def scale_mask(mask):
 
 def descale_mask(mask):
     return (mask/255).astype(np.uint8)
-
-def get_mask(segmentation, segment_id):
-  mask = (segmentation.cpu().numpy() == segment_id)
-  return scale_mask(mask)
 
 def softmax(logits):
     e_x = np.exp(logits - np.max(logits))
@@ -61,13 +57,12 @@ def to_brats_mask(mask_3d):
         brats_mask[brats_region_idx, :, :, :] = prev_brats_region
     return brats_mask
 
-def input_mask_to_segmentation(input_mask_labels, class_labels):
-    # map (4,512,512) to segmentation (512, 512)
-    # or map(4, 146, 512, 512) to (146, 512, 412)
-    input_mask_mapping = {label_id: label_id for label_id in class_labels}
-    input_mask_to_segm = np.vectorize(input_mask_mapping.get)(input_mask_labels.argmax(axis=0))
+def mask_to_segmentation(mask_labels, class_labels):
+    # map (num_labels, width, height) to segmentation (width, height)
+    input_mask_mapping = {mask_idx: label_id for mask_idx, label_id in enumerate(class_labels)}
+    input_mask_to_segm = np.vectorize(input_mask_mapping.get)(mask_labels.argmax(axis=0))
     return input_mask_to_segm.astype(np.uint8)
-
+    
 def post_proc_result_to_segmentation(results):
     # map results['segmentation'] to correct labels
     # note that id represents obj instances and can be different from label id
@@ -168,14 +163,13 @@ def plot_mask_comparison(input_class_labels, pred_class_labels, input_pixel_valu
     plt.tight_layout()
     plt.show()
 
-def plot_segmentation_comparison(input_pixel_values, input_segmentation, pred_segmentation, title):
+def plot_segmentation_comparison(input_pixel_values, input_segmentation, pred_segmentation, title, loc="lower right"):
     n_image = 3
     fig, axs = plt.subplots(nrows=1, ncols=n_image, figsize=(4*n_image, 4))
     denormalized_img = denormalize_img(input_pixel_values)
     mri_plt.plot_img(img_data=denormalized_img, title=title, fig=fig, axs=axs, row=0, col=0)
-
-    mri_plt.plot_segm_img(img_data=input_segmentation, fig=fig, axs=axs, row=0, col=1, use_legend=True)
-    mri_plt.plot_segm_img(img_data=pred_segmentation, fig=fig, axs=axs, row=0, col=2, use_legend=True)
+    mri_plt.plot_segm_img(img_data=input_segmentation, fig=fig, axs=axs, row=0, col=1, use_legend=True, loc=loc)
+    mri_plt.plot_segm_img(img_data=pred_segmentation, fig=fig, axs=axs, row=0, col=2, use_legend=True, loc=loc)
 
     plt.tight_layout()
     plt.show()

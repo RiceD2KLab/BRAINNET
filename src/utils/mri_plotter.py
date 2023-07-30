@@ -73,7 +73,7 @@ class MRIPlotter:
 
 
     def plot_segm_img(self, img_data, fig, axs, row, col, title=None, cmap=None, colorbar=False, segm_colorbar=True, slice_idx=None, 
-                      alpha=None, use_legend=False, overlay=False, **kwargs):
+                      alpha=None, use_legend=False, overlay=False, loc=None, **kwargs):
         '''
         Args:
             img_data: image data to be displayed
@@ -113,7 +113,6 @@ class MRIPlotter:
         segment_labels = np.unique(display_data)
         segment_labels.sort()
         
-
         # maskformer segmentation has -1. if data has this value, update the segment info
         if -1 in segment_labels and overlay is False:
             segment_dict[-1] = "NO LABEL"
@@ -145,8 +144,9 @@ class MRIPlotter:
             handles = []
             for idx, color in enumerate(segment_colors):
                 handles.append(mpatches.Patch(color=color, label=segment_names[idx]))
-
-            axs_element.legend(handles=handles, loc='lower right')
+            
+            handle_loc = loc if not None else 'lower right'
+            axs_element.legend(handles=handles, loc=handle_loc)
     
     def plot_masks(self, masks, fig, axs, row, col, title, legends, **kwargs):
         colors = ["red", "green"]

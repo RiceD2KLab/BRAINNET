@@ -25,14 +25,16 @@ def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
     pred_mask_labels = np.zeros(pred_mask_shape, dtype=np.uint8)
 
     # get predicted mask for each segment
-    for mask_idx, mask_id in enumerate(pred_class_labels):
+    for mask_idx, pred_label in enumerate(pred_class_labels):
         mask_pred_2d = np.zeros((pred_mask_shape[1], pred_mask_shape[2]), dtype=np.uint8)
 
-        # find predicted masks in results
+        # need to loop through segments_info because label_id with different instances can be found
         for item in segm_result['segments_info']:
-            if item['label_id'] == mask_id:
-                # get mask will scale to 255
-                mask_pred_2d += np.array( mf_utils.get_mask(segm_result['segmentation'], item['id']) )
+            if item['label_id'] == pred_label:
+                # get corresponding mask using item['id'] which is the instance value for that label
+                mask = (segm_result['segmentation'].cpu().numpy()  == item['id'])
+                scaled_mask = mf_utils.scale_mask(mask)
+                mask_pred_2d += np.array(scaled_mask)
 
         mask_pred_2d = mask_pred_2d.astype(np.uint8)
         pred_mask_labels[mask_idx, :, :] = mask_pred_2d
@@ -41,17 +43,34 @@ def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
     return pred_mask_labels, pred_class_labels
     
 class MaskFormerInference():
-    '''Assumes that the data reside in one folder'''
     
-    def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, transform: Compose):
+    def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, 
+                 upscaled_transform: Compose, scale_to_orig_size=True, orig_transform: Compose = None, orig_dim: tuple = None):
+        
+        if scale_to_orig_size == True:
+            assert orig_transform is not None, "provide orig_transform with unscaled image. otherwise, set 'scale_to_orig_size' param to false"
+            assert orig_dim is not None, "provide tuple for with the original dimension of the image. otherwise, set 'scale_to_orig_size' param to false"
+        
         self.model = model
         self.data_handler = data_handler
         self.processor = processor
-        self.transform = transform
+        self.scale_to_orig_size = scale_to_orig_size
+        
+        # specifies which dataset to use
+        # eg: train depth, train cross side, val cross front
         self.data_identifier = data_identifier
+        
+        # no resize transform
+        self.orig_transform = orig_transform
+        
+        # predict transform
+        self.upscaled_transform = upscaled_transform
+        self.orig_dim = orig_dim
+    
         # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
         all_files_in_dir = self.data_handler.list_mri_in_dir(mri_type=data_identifier)
         
+        # Just re-write to a format that the Maskformer DataLoader wants
         # UPENN-GBM-00040_122.nii.gz, UPENN-GBM-00073_20.nii.gz, UPENN-GBM-00016_139.nii.gz
         self.all_files = list(set([mri_common.get_mri_slice_file_name(file_name) for file_name in all_files_in_dir]))
         
@@ -62,7 +81,7 @@ class MaskFormerInference():
         # sort slices: UPENN-GBM-00073_1.nii.gz, UPENN-GBM-00073_2.nii.gz, UPENN-GBM-00073_3.nii.gz
         vol_list_sorted = sorted(vol_list, key=lambda x: int(x.split('_')[1].split('.')[0]))
         return vol_list_sorted
-        
+    
     def predict_segm(self, batch):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
@@ -71,33 +90,49 @@ class MaskFormerInference():
             model_outputs, results = self._predict_segm(batch)
         torch.cuda.empty_cache()
         return model_outputs, results
-
+         
     def predict_patient_mask(self, subj_id: str):
         
         print("Performing inference on", subj_id)
-        # get all slices for one patient or subj: expected is 146
+        
+        # Get all slices for one patient or subj
         data_list = self.get_patient_slices(subj_id)  
-
-        # define dataset given provided list
-        dataset = MaskformerMRIDataset(data_handler=self.data_handler, 
-                                       data_identifier=self.data_identifier,
-                                       data_list=data_list, processor=self.processor,
-                                       transform=self.transform, augment=False)
-
-        # define data loader
+        num_slices = len(data_list)
+        
         # TODO: review if batch_size is fixed
         batch_size = 1
-        dataloader = DataLoader(dataset, batch_size=batch_size,
-                                        shuffle=False, collate_fn=collate_fn)
-
+        
+        # dataloader for upscaled dataset
+        dataset_upscaled = MaskformerMRIDataset(data_handler=self.data_handler, 
+                                       data_identifier=self.data_identifier,
+                                       data_list=data_list, 
+                                       processor=self.processor,
+                                       transform=self.upscaled_transform, 
+                                       augment=False)
+        dataloader_upscale = DataLoader(dataset_upscaled, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+        
         # initalize 3d variables using shape of first input
-        first_img_shape = dataset[0]["pixel_values"].shape
-
-        # image_3d: (146, 3, 512, 512)
-        num_slices = len(data_list)
+        first_img_shape = dataset_upscaled[0]["pixel_values"].shape
+        
+        # dataloader for dataset with original size
+        dataloader_orig = None
+        if self.scale_to_orig_size:
+            dataset_orig = MaskformerMRIDataset(data_handler=self.data_handler, 
+                                        data_identifier=self.data_identifier,
+                                        data_list=data_list, 
+                                        processor=self.processor,
+                                        transform=self.orig_transform, 
+                                        augment=False)
+            dataloader_orig = DataLoader(dataset_orig, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+            first_img_shape = dataset_orig[0]["pixel_values"].shape
+        else:
+            # create dummy downloader for looping purposes
+            dataloader_orig = list(range(num_slices))
+        
+        # image_3d: (num_slices, 3 channels, width, height)
         image_3d = np.zeros((num_slices, first_img_shape[0], first_img_shape[1], first_img_shape[2]), dtype=np.uint8)
 
-        # true and predicted masks: (4, 146, 512, 512)
+        # initalize true and predicted masks: (4, num_slices, width, height)
         mask_shape_3d = (len(mri_common.SEGMENTS), num_slices, first_img_shape[1], first_img_shape[2])
         mask_pred_3d = np.zeros(mask_shape_3d, dtype=np.uint8)
         mask_true_3d = np.zeros(mask_shape_3d, dtype=np.uint8)
@@ -111,36 +146,54 @@ class MaskFormerInference():
         
         with torch.no_grad():
             
-            for ibatch, batch in enumerate(dataloader):
+            for (ibatch, batch_orig), (_, batch_upscale) in zip(enumerate(dataloader_orig), enumerate(dataloader_upscale)):
+                # determine input image batch to use:
+                input_batch = batch_orig if self.scale_to_orig_size else batch_upscale
+                
                 # get first item in batch where batch size = 1
-                image_cur = batch["pixel_values"][0]
+                image_cur = input_batch["pixel_values"][0]
                 image_3d[ibatch, :, :, :] = image_cur.numpy()
 
-                # post-processing/segmentation inference
-                model_outputs, segm_result = self._predict_segm(batch)
+                # perform inference
+                # always use upscaled version for post-processing i.e the transform with the size used during training
+                _, segm_result = self.predict_segm(batch_upscale)
                 
-                # e.g. (n, 512, 512) where n is the number of existing labels in the prediction
+                # e.g. (num_labels, width, height)
                 pred_mask_labels, pred_class_labels = get_mask_from_segm_result(segm_result=segm_result)
+                
+                # resize if specified
+                if self.scale_to_orig_size:
+                    pred_mask_labels = mf_utils.resize_mask(pred_mask_labels, original_size=self.orig_dim)
 
-                # build mask_pred_3d:
-                for mask_idx, label in enumerate(pred_class_labels):
-                    mask_pred_3d[label, ibatch, :, :] = pred_mask_labels[mask_idx, :, :]
+                # update mask_pred_3d by stacking each 2d prediction
+                # get 2d predicted mask for each predicted class label
+                for mask_idx, pred_label in enumerate(pred_class_labels):
+                    # note that the shape of pred_mask_labels is dependent on the number of labels predicted
+                    # e.g. if only 2 segments are predicted, the shape is (2, height, width)
+                    pred_mask = pred_mask_labels[mask_idx, :, :]
 
-                # obtain true mask where available
-                true_mask_labels = batch["mask_labels"][0]
-                true_class_labels = batch["class_labels"][0]
+                    # meanwhile, the shape of mask_pred_3d is fixed with the total number of segments as initialized above
+                    # we can use the predicted label to determine which channel to save the mask into
+                    mask_pred_3d[pred_label, ibatch, :, :] = pred_mask
+
+                # now we build the mask_true_3d 
+                true_mask_labels = input_batch["mask_labels"][0]
+                true_class_labels = input_batch["class_labels"][0]
                 for mask_idx, label in enumerate(true_class_labels.tolist()):
                     unscaled_mask = true_mask_labels[mask_idx,:,:]
+                    
+                    # this scales prediction to 0 to 255
                     mask_true_3d[label, ibatch, :, :] = mf_utils.scale_mask(unscaled_mask)
 
                 all_true_labels = list(set(all_true_labels + true_class_labels.tolist()))
                 all_pred_labels = list(set(all_pred_labels + pred_class_labels))
-   
-        torch.cuda.empty_cache()
-        return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels
         
+        torch.cuda.empty_cache()
+
+        return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels
+    
     def _predict_segm(self, batch):
-        # Note: this will only work if batch_size = 1
+        # Assumes batch_size is fixed to 1
         first_img =  batch["pixel_values"][0]
         target_size = transforms.ToPILImage()(first_img).size[::-1]
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -153,4 +206,3 @@ class MaskFormerInference():
         # post-processing/inference
         results=self.processor.post_process_instance_segmentation(outputs, target_sizes=[target_size])[0]
         return outputs, results
-    
