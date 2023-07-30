@@ -37,16 +37,16 @@ def calc_binary_metrics(segm_pred, segm_true, segm_id=None):
     recall = mdp.recall(mask_pred, mask_true)
     specificity = mdp.specificity(mask_pred, mask_true)
     metrics_dict = {
-        MetricName.TRUE_POSITIVE.value: np.count_nonzero(mask_pred & mask_true),
-        MetricName.TRUE_NEGATIVE.value: np.count_nonzero(~mask_pred & ~mask_true),
-        MetricName.FALSE_POSITIVE.value: np.count_nonzero(mask_pred & ~mask_true),
-        MetricName.FALSE_NEGATIVE.value: np.count_nonzero(~mask_pred & mask_true),
+        # MetricName.TRUE_POSITIVE.value: np.count_nonzero(mask_pred & mask_true),
+        # MetricName.TRUE_NEGATIVE.value: np.count_nonzero(~mask_pred & ~mask_true),
+        # MetricName.FALSE_POSITIVE.value: np.count_nonzero(mask_pred & ~mask_true),
+        # MetricName.FALSE_NEGATIVE.value: np.count_nonzero(~mask_pred & mask_true),
         MetricName.PRECISION.value : mdp.precision(mask_pred, mask_true),
         MetricName.RECALL.value: recall,
         MetricName.SPECIFICITY.value: specificity,
         MetricName.SENSITIVITY.value: recall,
-        MetricName.TRUE_POSITIVE_RATE.value: recall,
-        MetricName.TRUE_NEGATIVE_RATE.value: mdp.true_negative_rate(mask_pred, mask_true)
+        # MetricName.TRUE_POSITIVE_RATE.value: recall,
+        # MetricName.TRUE_NEGATIVE_RATE.value: mdp.true_negative_rate(mask_pred, mask_true)
     } 
     return metrics_dict
 

@@ -3,8 +3,10 @@
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
+import multiprocessing
 import pandas as pd
 import seaborn as sns
+import time
 from typing import List
 
 import utils.maskformer_utils as mf_utils
@@ -34,11 +36,11 @@ class MaskFormerEvaluation():
         # dice coefficient
         # output array of dice score for all segments: [0.9, 0.8, 0.92, 0.3]
         dice_score = self._calc_metric_all_segments(self.all_label_names, metrics.calc_dice_score, mask_pred_binary, mask_true_binary)
-
+        
         # 95% hausdorff distance
         # output array of hd95 for all segments: [5.3, 2.8, 3.92, 1]
-        hausdorff_val = self._calc_metric_all_segments(self.all_label_names, metrics.calc_hausdorff_95, mask_pred_binary, mask_true_binary)
-
+        hausdorff_val = self._calc_metric_all_segments_pool(self.all_label_names, metrics.calc_hausdorff_95, mask_pred_binary, mask_true_binary)
+        
         # common metrics
         # e.g. 'true_positive': [20927582, 148267, 687623, 226880]
         common_metrics = self._calc_metric_all_segments(self.all_label_names, metrics.calc_binary_metrics, mask_pred_binary, mask_true_binary)
@@ -270,11 +272,33 @@ class MaskFormerEvaluation():
         
         return all_hd95_copy
     
+    def _calc_metric_single_segment(self, args):
+        label_idx, metric_func, mask_pred_3d, mask_true_3d = args
+        true_mask_cur = mask_true_3d[label_idx, :, :, :]
+        pred_mask_cur = mask_pred_3d[label_idx, :, :, :]
+        result = metric_func(pred_mask_cur, true_mask_cur)
+        return result
+
+    # use pool from hausdorff distance
+    def _calc_metric_all_segments_pool(self, label_names, metric_func, mask_pred_3d, mask_true_3d):
+        # Create a pool of worker processes
+        pool = multiprocessing.Pool()  
+        args_list = [(label_idx, metric_func, mask_pred_3d, mask_true_3d) for label_idx in range(len(label_names))]
+        results = pool.map(self._calc_metric_single_segment, args_list)
+        
+        # Close the pool to free resources
+        pool.close()
+        
+        # Wait for all processes to complete
+        pool.join()  
+
+        return results
+
     def _calc_metric_all_segments(self, label_names, metric_func, mask_pred_3d, mask_true_3d):
         results = []
         for label_idx in range(len(label_names)):
-            true_mask_cur = mask_true_3d[label_idx,:,:,:].squeeze()
-            pred_mask_cur = mask_pred_3d[label_idx,:,:,:].squeeze()
+            true_mask_cur = mask_true_3d[label_idx,:,:,:]
+            pred_mask_cur = mask_pred_3d[label_idx,:,:,:]
             result = metric_func(pred_mask_cur, true_mask_cur)
             results.append(result)
         return results                 
