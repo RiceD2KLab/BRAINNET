@@ -63,9 +63,11 @@ class MaskFormerInference():
         # no resize transform
         self.orig_transform = orig_transform
         
+        # original dimensions of the file
+        self.orig_dim = orig_dim
+        
         # predict transform
         self.upscaled_transform = upscaled_transform
-        self.orig_dim = orig_dim
     
         # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
         all_files_in_dir = self.data_handler.list_mri_in_dir(mri_type=data_identifier)
@@ -156,7 +158,7 @@ class MaskFormerInference():
 
                 # perform inference
                 # always use upscaled version for post-processing i.e the transform with the size used during training
-                _, segm_result = self.predict_segm(batch_upscale)
+                _, segm_result = self._predict_segm(batch_upscale)
                 
                 # e.g. (num_labels, width, height)
                 pred_mask_labels, pred_class_labels = get_mask_from_segm_result(segm_result=segm_result)
