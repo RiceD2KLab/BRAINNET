@@ -572,6 +572,8 @@ class DataHandler:
         suffix = os.path.splitext(file_path)
         if file_path.endswith(".nii.gz"):
             return ".nii.gz"
+        elif file_path.endswith(".tii.gz"):
+            return ".tii.gz"
         else: 
             return suffix[1]
         
