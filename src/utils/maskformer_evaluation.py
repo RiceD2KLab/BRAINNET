@@ -51,7 +51,7 @@ class MaskFormerEvaluation():
         return dice_score, hausdorff_val, common_metrics_dict
                 
     def predict_and_eval(self, subj_names: List[str], mf_inference: MaskFormerInference, data_handler: DataHandler,
-                        metrics_dir_prefix: str, metrics_file_name: str, recalculate: bool):
+                        metrics_dir_prefix: str, metrics_file_name: str, recalculate: bool, batch_size=10):
         
         all_dice = []
         all_hd95 = []
@@ -61,7 +61,7 @@ class MaskFormerEvaluation():
         metrics_summary = {}
         
         if recalculate:
-                all_dice, all_hd95, all_common_metrics, error_files = self._predict_and_calc_metrics(subj_selected=subj_names, mf_inference=mf_inference)
+                all_dice, all_hd95, all_common_metrics, error_files = self._predict_and_calc_metrics(subj_selected=subj_names, mf_inference=mf_inference, batch_size=batch_size)
 
                 print("Files with error:", error_files)
 
@@ -258,18 +258,18 @@ class MaskFormerEvaluation():
                 if hd95 is None or hd95 == np.inf:
                     # get all indices with invalid values
                     none_indices.append((subj_idx, segm_idx))
-                else:
-                    # simultaneously, find the max hd95 given the dataset
-                    if hd95 > max_value:
-                        max_value = hd95
+                # else:
+                #     # simultaneously, find the max hd95 given the dataset
+                #     if hd95 > max_value:
+                #         max_value = hd95
 
-        print("max hausdorff", str(max_value))
-        print("indices with invalid hd95", str(none_indices))
-
+        # why 373.12866 in Brats 2021 winner?
+        max_value = 373.12866
+        print("replacing invalid indices with fixed hausdorff", str(max_value))
+        print("indices with invalid hd95", str(none_indices))        
         # replace the invalid values with max hd value
         for row, col in none_indices:
-            all_hd95_copy[row][col] = max_value + 1
-        
+            all_hd95_copy[row][col] = max_value
         return all_hd95_copy
     
     def _calc_metric_single_segment(self, args):
@@ -303,7 +303,7 @@ class MaskFormerEvaluation():
             results.append(result)
         return results                 
 
-    def _predict_and_calc_metrics(self, subj_selected: List[str], mf_inference: MaskFormerInference):
+    def _predict_and_calc_metrics(self, subj_selected: List[str], mf_inference: MaskFormerInference, batch_size: int):
         all_dice = []
         all_hd95 = []
         all_common_metrics = []
@@ -313,7 +313,7 @@ class MaskFormerEvaluation():
         for subj_id in subj_selected:
 
             # perform inference for each slice within the volume
-            mask_3d_pred_results = mf_inference.predict_patient_mask(subj_id=subj_id)
+            mask_3d_pred_results = mf_inference.predict_patient_mask(subj_id=subj_id, batch_size=batch_size)
             mask_true_3d, mask_pred_3d = mask_3d_pred_results[1], mask_3d_pred_results[2]
             
             # since prediction range is from 0 to 255, convert data back to binary
