@@ -4,7 +4,7 @@ import torch
 import torchvision
 import torchvision.transforms.functional as TF
 
-from PIL import Image
+from PIL import Image, ImageEnhance
 from torch import from_numpy
 from torch.utils.data import Dataset
 from typing import List
@@ -121,6 +121,11 @@ class MaskformerMRIDataset(Dataset):
             pil_image = Image.fromarray(image.astype(np.uint8))
             color_jitter = torchvision.transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
             pil_image = color_jitter(pil_image)
+            
+            gamma_factor = 1.5 
+            enhancer = ImageEnhance.Contrast(pil_image)
+            pil_image = enhancer.enhance(gamma_factor)
+
             image = np.array(pil_image)
             # print("image mean, max=",image[:,:,0].mean(), image[:,:,0].max())
 
