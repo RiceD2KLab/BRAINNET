@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from livelossplot import PlotLosses
+from tqdm.auto import tqdm
 
 
 class EarlyStopper:
@@ -324,9 +325,6 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     model.to(device)
     loss_fn.to(device)
 
-    # set the model to train
-    model.train()
-
     # set a min loss value for checkpoint saving
     min_loss = 1e9
 
@@ -337,6 +335,8 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     # enter the training loop
     for epoch in range(1, nepochs + 1):
 
+        print(f"Starting epoch: {epoch}")
+
         # create an empty dictionary for the loss logs
         logs = {}
 
@@ -344,7 +344,10 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         running_loss = 0.0
         num_samples = 0
 
-        for batch in dataloader:
+        # set model to train
+        model.train()
+
+        for batch in tqdm(dataloader):
             # move batch to device
             batch_current = batch["vol"].to(device, dtype=torch.float)
 

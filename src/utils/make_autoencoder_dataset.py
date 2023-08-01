@@ -1,10 +1,10 @@
 import os
 import numpy as np
-from torch import from_numpy
+from torch import stack, from_numpy
 from torch.utils.data import Dataset
 import nibabel as nib
 
-# useful reference: 
+# useful reference:
 # https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 # https://blog.paperspace.com/dataloaders-abstractions-pytorch/
 
@@ -31,11 +31,23 @@ def create_ae_data_list(data_dir, outfile_str="data_list.txt"):
     unique_files = list(set(unique_files))
     unique_files.sort()
     print(f"Number of unique samples: {len(unique_files)}")
-    
+
     # write out unique_files to disk
     with open(os.path.join(data_dir, outfile_str), 'w') as outfile:
         for item in unique_files:
             outfile.write("%s\n" % item)
+
+
+def collate_fn(batch):
+    """
+    Provides support for custom object types during batch collation
+    """
+    return {
+        "subj_no": [example["subj_no"] for example in batch],
+        "vol": stack([example["vol"] for example in batch]),
+        "affine": [example["affine"] for example in batch],
+        "header": [example["header"] for example in batch],
+    }
 
 
 class AutoencoderMRIDataset(Dataset):
@@ -56,15 +68,15 @@ class AutoencoderMRIDataset(Dataset):
         with open(data_list_fn, 'r') as file:
             self.n_data = sum(1 for _ in file)
 
-    
+
     def __len__(self):
         return self.n_data
-    
+
 
     def __getitem__(self, idx):
         if idx >= self.n_data:
             print(f"Warning: given index {idx} does not exist. Using first sample instead")
-        
+
         # find a file corresponding to the current index
         with open(self.data_list_fn, 'r') as curr_file:
             for line_number, line_content in enumerate(curr_file):
@@ -83,9 +95,16 @@ class AutoencoderMRIDataset(Dataset):
 
         # load data file to image
         data_cur = nib.load(os.path.join(self.data_dir, data_file_0))
+        # capture the affine transformation matrix
+        affine = data_cur.affine
+        # capture the image header
+        header = data_cur.header
+        # get the input dimensions
         n_h = data_cur.shape[0]
         n_w = data_cur.shape[1]
         n_d = data_cur.shape[2]
+        # intialize an array of zeros with the same dimensions as the inpu
+        # with an extra dimension to index the four input volumes
         vol = np.zeros((n_h, n_w, n_d, 4))
 
         # add data_cur to image
@@ -95,26 +114,30 @@ class AutoencoderMRIDataset(Dataset):
         for ifile, file in enumerate(list((data_file_1, data_file_2, data_file_3))):
             vol[:, :, :, ifile + 1] = nib.load(os.path.join(self.data_dir, file)).get_fdata()
 
-        
+
         # create a mapping of the sample
-        sample = {"vol": vol}
+        sample = {
+            "subj_no": subj_no,
+            "vol": vol,
+            "affine": affine,
+            "header": header,
+        }
 
         # apply any desired transformations
         if self.transforms:
-            sample = self.transforms(sample)
+            sample["vol"] = self.transforms(sample["vol"])
 
         return sample
-    
+
 
 class ToTensor:
     """
     converts numpy ndarrays to Tensors
     """
-    def __call__(self, sample):
-        vol = sample['vol']
+    def __call__(self, vol):
 
         # swap channels to be first axis
         # numpy array format HxWxZxC
         # PyTorch tensor format CxHxWxZ
         vol = vol.transpose((3, 0, 1, 2))
-        return {"vol": from_numpy(vol)}
+        return from_numpy(vol)
