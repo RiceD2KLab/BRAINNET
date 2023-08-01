@@ -335,6 +335,8 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     # enter the training loop
     for epoch in range(1, nepochs + 1):
 
+        print(f"Starting epoch: {epoch}")
+
         # create an empty dictionary for the loss logs
         logs = {}
 
