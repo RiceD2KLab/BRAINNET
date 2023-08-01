@@ -9,6 +9,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from livelossplot import PlotLosses
+from tqdm.auto import tqdm
+import nibabel as nib
+import matplotlib.pyplot as plt
 
 
 class EarlyStopper:
@@ -324,9 +327,6 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     model.to(device)
     loss_fn.to(device)
 
-    # set the model to train
-    model.train()
-
     # set a min loss value for checkpoint saving
     min_loss = 1e9
 
@@ -337,6 +337,8 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
     # enter the training loop
     for epoch in range(1, nepochs + 1):
 
+        print(f"Starting epoch: {epoch}")
+
         # create an empty dictionary for the loss logs
         logs = {}
 
@@ -344,7 +346,10 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
         running_loss = 0.0
         num_samples = 0
 
-        for batch in dataloader:
+        # set model to train
+        model.train()
+
+        for batch in tqdm(dataloader):
             # move batch to device
             batch_current = batch["vol"].to(device, dtype=torch.float)
 
@@ -392,6 +397,107 @@ def autoencoder_training_loop(model, loss_fn, optimizer, dataloader, nepochs=100
             if early_stopper.early_stop(epoch_loss):
                 print(f"Stopping early at epoch {epoch}")
                 break
+
+
+def get_nifti_images(latent_rep, affine, header):
+    """
+    Helper function to create Nifti images of latent space representation
+
+    Inputs:
+        latent_rep - a 4D numpy array where the last dimension are the latent vectors
+        affine - a 2D numpy array consisting of the affine transformation matrix
+        header - an nibabel.nifti1.Nifti1Header object
+
+    Returns a tuple of nibable.nifti1.Nifti1Image objects
+    """
+    assert latent_rep.shape[-1] == 3
+    # split the latent vectors out
+    rep1 = latent_rep[:, :, :, 0]
+    rep2 = latent_rep[:, :, :, 1]
+    rep3 = latent_rep[:, :, :, 2]
+
+    # create the nifti images
+    nifti_img1 = nib.Nifti1Image(rep1, affine, header=header)
+    nifti_img2 = nib.Nifti1Image(rep2, affine, header=header)
+    nifti_img3 = nib.Nifti1Image(rep3, affine, header=header)
+
+    return nifti_img1, nifti_img2, nifti_img3
+
+
+def output_latent_space_vectors(dataloader, batch_size, model, output_dir, verbose=True, plot_feats=True):
+    """
+    Given a Torch DataLoader of inputs, outputs the latent space
+    representation learned by the autoencoder
+
+    Inputs:
+        dataloader - an instance of a Torch DataLoader class containing input data
+        batch_size - int, batch size used in creating dataloader
+        model - an instance of the fitted Autoencoder model
+        output_dir - str, path to save outputs
+        verbose - boolean, whether to give print updates
+        plot_feats - boolean, default True will plot all latent vectors as a QC
+
+    Returns None
+    """
+    # create output dir if it does not exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # get total number of batches
+    total_batches = len(dataloader)
+
+    # set the device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # iterate over the input dataloader
+    for ibatch, batch in enumerate(tqdm(dataloader)):
+        print(f"Working on batch {ibatch + 1} of {total_batches}")
+        # iterate over batchsize
+        for nbatch in range(batch_size):
+            # pass through the encoder to get the latent space representation
+            latent_rep = model.encoder(
+                batch["vol"][nbatch].to(device, dtype=torch.float)
+            )
+            # convert latent_rep from torch.tensor to numpy.ndarray
+            # tranpose the dimensions so that the latent space vectors are the last
+            latent_rep = latent_rep.cpu().detach().numpy().transpose(1, 2, 3, 0)
+            # get the subject number
+            subj_no = batch["subj_no"][nbatch]
+            # get the affine transformation matrix
+            affine = batch["affine"][nbatch]
+            # get the header
+            header = batch["header"][nbatch]
+            # convert the numpy array latent space to three nifti images
+            nifti_img1, nifti_img2, nifti_img3 = get_nifti_images(latent_rep, affine, header)
+            # output nifti images
+            for inifti, nifti in enumerate([nifti_img1, nifti_img2, nifti_img3]):
+                # create the output file name
+                file_name = subj_no + f'_latent_vector_{inifti + 1}' + '.nii.gz'
+                # save to disk
+                nib.save(nifti, os.path.join(output_dir, file_name))
+            # verbose logging
+            if verbose:
+                print(f"\tsubject no: {subj_no}")
+                print(f"\tLatent space representation shape: {latent_rep.shape}")
+            # plot latent space vectors
+            if plot_feats:
+                fig, axs = plt.subplots(ncols=3)
+                # latent vector 1
+                axs[0].imshow(latent_rep[:, :, 73, 0])
+                axs[0].set_title('Latent vector 1')
+                axs[0].tick_params(left=False, right=False, labelleft=False, labelbottom = False, bottom=False)
+                # latent vector 2
+                axs[1].imshow(latent_rep[:, :, 73, 1])
+                axs[1].set_title('Latent vector 2')
+                axs[1].tick_params(left=False, right=False, labelleft=False, labelbottom = False, bottom=False)
+                # latent vector 3
+                axs[2].imshow(latent_rep[:, :, 73, 2])
+                axs[2].set_title('Latent vector 3')
+                axs[2].tick_params(left=False, right=False, labelleft=False, labelbottom = False, bottom=False)
+                if not verbose:
+                    # include subject number as figure suptitle
+                    fig.suptitle(f"Subject: {subj_no}", y=0.75)
+                plt.show()
 
 
 def normalize_channels(mri_tensor):

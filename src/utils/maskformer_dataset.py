@@ -11,9 +11,10 @@ from typing import List
 
 from utils.data_handler import DataHandler, MriType, StructuralScan
 
-# torch.manual_seed(100)
-# np.random.seed(100)
-# random.seed(100)
+seed = 100
+torch.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
 
 # useful reference: 
 # https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
