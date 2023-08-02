@@ -16,59 +16,6 @@ importlib.reload(gs)
 from utils.google_storage import GStorageClient
 from onedrivedownloader import download
     
-# All constants from source directories
-# Define One Drive urls and file names
-IMAGES_STRUCTURAL_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ER8oOEAm1ANGlK4sodUPdX0B6_7IxmbRoneyo-RXI2HYOg"
-IMAGES_STRUCTURAL_FNAME = "images_structural"
-
-# Manually annotated by medical experts
-IMAGES_ANNOT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EbmrLEe1ZgpNkaujtMtlDIEB9rQ0Zj82dOWIttA8sD5lSg"
-IMAGES_ANNOT_FNAME = "images_segm" 
-
-IMAGES_ANNOT_REDUCED_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EfqrvokObOJEhovsqLl_sscBgplo836OUdN5kJzAYqPZyg"
-IMAGES_ANNOT_REDUCED_FNAME = "images_annot_reduced"
-
-# Predicted labels from BraTs winners
-IMAGES_AUTO_SEGM_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EToY-Cli4vxMqYwHx_NZ4JsBi1Lo8tOskj9zb4_AZmDfcg"
-IMAGES_AUTO_SEGM_FNAME = "automated_segm"
-
-IMAGES_AUTO_SEGM_REDUCED_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXwqKvC8QpBBjFQUXzKR1-IBtJeP1hwXUQAoJOneJx4-Hw"
-IMAGES_AUTO_SEGM_REDUCED_FNAME = "automated_segm_reduced"
-
-# annot reduced normalized
-IMAGES_ANNOT_REDUCED_NORM_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EccpxJhE8T5BgDkvbgUr6kIBPG0Nx9dneBeaqPPZ0YlZhw"
-IMAGES_ANNOT_REDUCED_NORM_FNAME = "images_annot_reduced_norm"
-
-# 2d slices depth direction
-IMAGES_TRAIN_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWo-2IfjoUNImdWqJxc2iywBE1_8q8kVZHIhd9eOFv1wFg"
-IMAGES_TRAIN_DEPTH_FNAME = "train_2d"
- 
-IMAGES_VAL_DEPTH_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ERKhTBiFCUlBpn2L5aG2-CkBMDIJBnLZhzqjkpJeFOIQVQ"
-IMAGES_VAL_DEPTH_FNAME = "val_2d" 
-
-IMAGES_TEST_DEPTH_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeMV2GRSQWdPkQpDmQouC8gBGqGAFahtyiZFCdrkHoIk1w"
-IMAGES_TEST_DEPTH_FNAME = "test_2d_depth"
-
-# 2d slices cross-side direction
-IMAGES_TRAIN_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeYmGZIuupROvu0xpljaJBsBueQcPuMC_sM8nzwdYDcrMg"
-IMAGES_TRAIN_CROSS_SIDE_FNAME = "train_2d_cross"
- 
-IMAGES_VAL_CROSS_SIDE_URL   = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ERS3vGnRyPpLoiN-PLDUaTQBuGvbv9RaV-Xs-UYNmz6GWA"
-IMAGES_VAL_CROSS_SIDE_FNAME = "val_2d_cross" 
-
-IMAGES_TEST_CROSS_SIDE_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EcwJqz2sLttFs0Ujni4MjhkBSrxcOzHnOrbzCeiUXBeiTQ"
-IMAGES_TEST_CROSS_SIDE_FNAME = "test_2d_cross_side"
-
-# 2D slices cross-front direction
-IMAGES_TRAIN_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EQHcZZBwSw1CgFqvJnz2b7cBno-js9YMS_GcKl9jffaylg"
-IMAGES_TRAIN_CROSS_FRONT_FNAME = "train_2d_cross_front"
-
-IMAGES_VAL_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZatriq7t2lHkrcc5s11IPoBcm2kDSAtXLuFvRQ1tLUOMA"
-IMAGES_VAL_CROSS_FRONT_FNAME = "val_2d_cross_front"
-
-IMAGES_TEST_CROSS_FRONT_URL = "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ETeMow8TKc1BgdsdSBxSLPMBHT-Iq2pZN_OIcsp7HfcQwg"
-IMAGES_TEST_CROSS_FRONT_FNAME = "test_2d_cross_front"
-
 # All constants for destination directories
 # this will be either in google storage or runtime depending on flag
 DATA_DIR = "content/data"
@@ -83,12 +30,12 @@ class StructuralScan(str, Enum):
     FLAIR = "FLAIR"
 
 class MriType(Enum):
-    STRUCT_SCAN = 1
+    STRUCT_SCAN = 1 # Original MRI Scans: FLAIR, T1, T1GD, T2
     AUTO_SEGMENTED = 2
-    ANNOTATED = 3
+    ANNOTATED = 3 # Manually annotated by medical experts
     STRUCT_SCAN_REDUCED = 4
     AUTO_SEGMENTED_REDUCED = 5
-    ANNOTATED_REDUCED = 6
+    ANNOTATED_REDUCED = 6 # Manually annotated by medical experts - zero reduction
     TRAIN_2D_DEPTH = 7
     VAL_2D_DEPTH = 8
     TEST_2D_DEPTH = 9
@@ -98,8 +45,157 @@ class MriType(Enum):
     TRAIN_2D_CROSS_FRONT = 13
     VAL_2D_CROSS_FRONT = 14
     TEST_2D_CROSS_FRONT = 15
-    ANNOTATED_REDUCED_NORM = 16
+    ANNOTATED_REDUCED_NORM = 16 #  # Manually annotated by medical experts - zero reduction and normalized
+    TRAIN_AE_2D_DEPTH = 17
+    VAL_AE_2D_DEPTH = 18
+    TEST_AE_2D_DEPTH = 19
+    TRAIN_AE_2D_CROSS_SIDE = 20
+    VAL_AE_2D_CROSS_SIDE = 21
+    TEST_AE_2D_CROSS_SIDE = 22
+    TRAIN_AE_2D_CROSS_FRONT = 23
+    VAL_AE_2D_CROSS_FRONT = 24
+    TEST_AE_2D_CROSS_FRONT = 25
 
+
+MRI_ONEDRIVE_INFO = {
+    MriType.STRUCT_SCAN.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ER8oOEAm1ANGlK4sodUPdX0B6_7IxmbRoneyo-RXI2HYOg",
+        "fname": "images_structural"
+    },
+    MriType.AUTO_SEGMENTED.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EToY-Cli4vxMqYwHx_NZ4JsBi1Lo8tOskj9zb4_AZmDfcg",
+        "fname": "automated_segm"
+    },
+    MriType.ANNOTATED.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EbmrLEe1ZgpNkaujtMtlDIEB9rQ0Zj82dOWIttA8sD5lSg",
+        "fname": "images_segm"
+    },
+    MriType.AUTO_SEGMENTED_REDUCED.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXwqKvC8QpBBjFQUXzKR1-IBtJeP1hwXUQAoJOneJx4-Hw",
+        "fname": "automated_segm_reduced"
+    },
+    MriType.STRUCT_SCAN_REDUCED.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EfqrvokObOJEhovsqLl_sscBgplo836OUdN5kJzAYqPZyg",
+        "fname": "images_annot_reduced",
+        "unzip_path": ""
+    },
+    MriType.ANNOTATED_REDUCED.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EfqrvokObOJEhovsqLl_sscBgplo836OUdN5kJzAYqPZyg",
+        "fname": "images_annot_reduced"
+    },
+    MriType.ANNOTATED_REDUCED_NORM.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EccpxJhE8T5BgDkvbgUr6kIBPG0Nx9dneBeaqPPZ0YlZhw",
+        "fname": "images_annot_reduced_norm"
+    },
+    MriType.TRAIN_2D_DEPTH.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWo-2IfjoUNImdWqJxc2iywBE1_8q8kVZHIhd9eOFv1wFg",
+        "fname": "train_2d",
+        "unzip_path": "2D_slices_reduced_norm", # custom unzip path different from how the zip file is structured,
+        "has_data_subfolder": True
+    },
+    MriType.VAL_2D_DEPTH.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ERKhTBiFCUlBpn2L5aG2-CkBMDIJBnLZhzqjkpJeFOIQVQ",
+        "fname": "val_2d",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True # sometimes after extracting, the folders still have extra data subfolder. need to consider this
+    },
+    MriType.TEST_2D_DEPTH.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeMV2GRSQWdPkQpDmQouC8gBGqGAFahtyiZFCdrkHoIk1w",
+        "fname": "test_2d_depth",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True 
+    },
+    MriType.TRAIN_2D_CROSS_SIDE.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EeYmGZIuupROvu0xpljaJBsBueQcPuMC_sM8nzwdYDcrMg",
+        "fname": "train_2d_cross",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True 
+    },
+    MriType.VAL_2D_CROSS_SIDE.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ERS3vGnRyPpLoiN-PLDUaTQBuGvbv9RaV-Xs-UYNmz6GWA",
+        "fname": "val_2d_cross",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True 
+    },
+    MriType.TEST_2D_CROSS_SIDE.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EcwJqz2sLttFs0Ujni4MjhkBSrxcOzHnOrbzCeiUXBeiTQ",
+        "fname": "test_2d_cross_side",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TRAIN_2D_CROSS_FRONT.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EQHcZZBwSw1CgFqvJnz2b7cBno-js9YMS_GcKl9jffaylg",
+        "fname": "train_2d_cross_front",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.VAL_2D_CROSS_FRONT.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EZatriq7t2lHkrcc5s11IPoBcm2kDSAtXLuFvRQ1tLUOMA",
+        "fname": "val_2d_cross_front",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TEST_2D_CROSS_FRONT.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/ETeMow8TKc1BgdsdSBxSLPMBHT-Iq2pZN_OIcsp7HfcQwg",
+        "fname": "test_2d_cross_front",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True 
+    },
+    MriType.TRAIN_AE_2D_DEPTH.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.VAL_AE_2D_DEPTH.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TEST_AE_2D_DEPTH.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TRAIN_AE_2D_CROSS_SIDE.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.VAL_AE_2D_CROSS_SIDE.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TEST_AE_2D_CROSS_SIDE.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TRAIN_AE_2D_CROSS_FRONT.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.VAL_AE_2D_CROSS_FRONT.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    },
+    MriType.TEST_AE_2D_CROSS_FRONT.name: {
+        "url": "",
+        "fname": "",
+        "unzip_path": "2D_slices_reduced_norm",
+        "has_data_subfolder": True
+    }
+}
 class DataHandler:
     """
         Handles all functions related to MRI and training data management such as saving, downloading and reading
@@ -373,9 +469,9 @@ class DataHandler:
         if self.use_cloud == False:
             # attempt to download files to runtime first
             self.download_from_onedrive(mri_type=mri_type)
-            
+        
         return self.list_dir(absolute_dir=dir, sort=sort)
-
+    
     def dir_exists(self, train_dir_prefix, use_cloud=True):
         source_path = self._get_train_dir(file_name="", train_dir_prefix=train_dir_prefix)
         if use_cloud:
@@ -398,60 +494,28 @@ class DataHandler:
         
         if not os.path.exists(filename):
             # Note: For some MRI folder structures, unzipping results to a subdirectory called /data
-            # specify unzip path parameter to control where the files go and bypass extra subdirectories as needed
+            # specify unzip_path parameter to control where the files go and bypass extra subdirectories as needed
             # eg: data/images_annot_reduced instead of data/data/images_annot_reduced
             
-            # TODO: force unizp path for now to match google storage: /content/data/2D_slices_reduced_norm/data/
-            dir_2d_slices = os.path.join(self.data_dir, "2D_slices_reduced_norm")
-            dir_annot_reduced = os.path.dirname(self.data_dir)
+            odrive_info = MRI_ONEDRIVE_INFO[mri_type.name]
+            odrive_url = odrive_info['url']
             
-            if mri_type == MriType.STRUCT_SCAN:
-                download(IMAGES_STRUCTURAL_URL, filename=filename)
-            
-            elif mri_type == MriType.AUTO_SEGMENTED: 
-                download(IMAGES_AUTO_SEGM_URL, filename=filename)
-                
-            elif mri_type == MriType.ANNOTATED:
-                download(IMAGES_ANNOT_URL, filename=filename)
-                
-            elif mri_type == MriType.STRUCT_SCAN_REDUCED:
-                download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=dir_annot_reduced)
-                
-            elif mri_type == MriType.AUTO_SEGMENTED_REDUCED:
-                download(IMAGES_AUTO_SEGM_REDUCED_URL, filename=filename)
-                
-            elif mri_type == MriType.ANNOTATED_REDUCED:
-                download(IMAGES_ANNOT_REDUCED_URL, filename=filename, unzip_path=dir_annot_reduced)
-            
-            elif mri_type == MriType.TRAIN_2D_DEPTH:
-                download(IMAGES_TRAIN_DEPTH_URL, filename=filename, unzip_path=dir_2d_slices)
-        
-            elif mri_type == MriType.VAL_2D_DEPTH:
-                download(IMAGES_VAL_DEPTH_URL, filename=filename, unzip_path=dir_2d_slices)
-                
-            elif mri_type == MriType.TEST_2D_DEPTH:
-                download(IMAGES_TEST_DEPTH_URL, filename=filename, unzip_path=dir_2d_slices)
-
-            elif mri_type == MriType.TRAIN_2D_CROSS_SIDE:
-                download(IMAGES_TRAIN_CROSS_SIDE_URL, filename=filename, unzip_path=dir_2d_slices)
-            
-            elif mri_type == MriType.VAL_2D_CROSS_SIDE:
-                download(IMAGES_VAL_CROSS_SIDE_URL, filename=filename, unzip_path=dir_2d_slices)
-                
-            elif mri_type == MriType.TEST_2D_CROSS_SIDE: 
-                download(IMAGES_TEST_CROSS_SIDE_URL, filename=filename, unzip_path=dir_2d_slices)
-    
-            elif mri_type == MriType.TRAIN_2D_CROSS_FRONT:
-                download(IMAGES_TRAIN_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
-            
-            elif mri_type == MriType.VAL_2D_CROSS_FRONT:
-                download(IMAGES_VAL_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
-                
-            elif mri_type == MriType.TEST_2D_CROSS_FRONT: 
-                download(IMAGES_TEST_CROSS_FRONT_URL, filename=filename, unzip_path=dir_2d_slices)
-
-            elif mri_type == MriType.ANNOTATED_REDUCED_NORM:
-                download(IMAGES_ANNOT_REDUCED_NORM_URL, filename=filename, unzip_path=dir_annot_reduced)
+            has_parent_data_dir = [
+                MriType.STRUCT_SCAN_REDUCED,
+                MriType.ANNOTATED_REDUCED,
+                MriType.ANNOTATED_REDUCED_NORM
+            ] 
+            if mri_type in has_parent_data_dir:
+                # bypass to use data/images_annot_reduced as unzip path instead of data/data/images_annot_reduced
+                dir_annot_reduced = os.path.dirname(self.data_dir)
+                download(odrive_url, filename=filename, unzip_path=dir_annot_reduced)
+            elif "unzip_path" in odrive_info:
+                # if unzip path is specified
+                odrive_unzip_path = odrive_info['unzip_path']
+                unzip_path = os.path.join(self.data_dir, odrive_unzip_path)
+                download(odrive_url, filename=filename, unzip_path=unzip_path)
+            else:
+                download(odrive_url, filename=filename)
 
     
     def create_temp_file(self, file_path):
@@ -517,56 +581,18 @@ class DataHandler:
         return f_path
 
     def _get_mri_dir(self, mri_type: MriType):
-        dir_2d_slices = os.path.join(self.data_dir, "2D_slices_reduced_norm", "data")
+        odrive_info = MRI_ONEDRIVE_INFO[mri_type.name]
+        fname = odrive_info["fname"]
+        data_dir = ""
+    
+        if "unzip_path" in odrive_info:    
+            unzip_path = odrive_info["unzip_path"]
+            data_dir = unzip_path
         
-        if mri_type == MriType.STRUCT_SCAN:
-            return os.path.join(self.data_dir, IMAGES_STRUCTURAL_FNAME)
-        
-        elif mri_type == MriType.AUTO_SEGMENTED:
-            return os.path.join(self.data_dir, IMAGES_AUTO_SEGM_FNAME)
-
-        elif mri_type == MriType.ANNOTATED:
-            return os.path.join(self.data_dir, IMAGES_ANNOT_FNAME)
-            
-        elif mri_type == MriType.STRUCT_SCAN_REDUCED:
-            # same as IMAGES_ANNOT_REDUCED_FNAME
-            return os.path.join(self.data_dir, IMAGES_ANNOT_REDUCED_FNAME)
-
-        elif mri_type == MriType.AUTO_SEGMENTED_REDUCED:
-            return os.path.join(self.data_dir, IMAGES_AUTO_SEGM_REDUCED_FNAME)
-
-        elif mri_type == MriType.ANNOTATED_REDUCED:
-            return os.path.join(self.data_dir, IMAGES_ANNOT_REDUCED_FNAME)
-
-        elif mri_type == MriType.TRAIN_2D_DEPTH:
-            return os.path.join(dir_2d_slices, IMAGES_TRAIN_DEPTH_FNAME)
-
-        elif mri_type == MriType.VAL_2D_DEPTH:
-            return os.path.join(dir_2d_slices, IMAGES_VAL_DEPTH_FNAME)
-        
-        elif mri_type == MriType.TEST_2D_DEPTH:
-            return os.path.join(dir_2d_slices, IMAGES_TEST_DEPTH_FNAME)
-
-        elif mri_type == MriType.TRAIN_2D_CROSS_SIDE:
-            return os.path.join(dir_2d_slices, IMAGES_TRAIN_CROSS_SIDE_FNAME)
-        
-        elif mri_type == MriType.VAL_2D_CROSS_SIDE:
-            return os.path.join(dir_2d_slices, IMAGES_VAL_CROSS_SIDE_FNAME)
-        
-        elif mri_type == MriType.TEST_2D_CROSS_SIDE:
-            return os.path.join(dir_2d_slices, IMAGES_TEST_CROSS_SIDE_FNAME)
-        
-        elif mri_type == MriType.TRAIN_2D_CROSS_FRONT:
-            return os.path.join(dir_2d_slices, IMAGES_TRAIN_CROSS_FRONT_FNAME)
-        
-        elif mri_type == MriType.VAL_2D_CROSS_FRONT:
-            return os.path.join(dir_2d_slices, IMAGES_VAL_CROSS_FRONT_FNAME)
-        
-        elif mri_type == MriType.TEST_2D_CROSS_FRONT:
-            return os.path.join(dir_2d_slices, IMAGES_TEST_CROSS_FRONT_FNAME)
-        
-        elif mri_type == MriType.ANNOTATED_REDUCED_NORM:
-            return os.path.join(self.data_dir, IMAGES_ANNOT_REDUCED_NORM_FNAME)
+        if "has_data_subfolder" in odrive_info:
+            data_dir = os.path.join(data_dir, "data")
+    
+        return os.path.join(self.data_dir, data_dir, fname)
         
     def _get_blob_extension(self, file_path):
         suffix = os.path.splitext(file_path)
