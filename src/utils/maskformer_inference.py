@@ -134,7 +134,7 @@ class MaskFormerInference():
             dataloader_orig = list(range(batch_count))
         
         # image_3d: (num_slices, 3 channels, width, height)
-        image_3d = np.zeros((num_slices, first_img_shape[0], first_img_shape[1], first_img_shape[2]), dtype=np.uint8)
+        image_3d = np.zeros((num_slices, first_img_shape[0], first_img_shape[1], first_img_shape[2]), dtype=np.float64)
 
         # initalize true and predicted masks: (4, num_slices, width, height)
         mask_shape_3d = (len(mri_common.SEGMENTS), num_slices, first_img_shape[1], first_img_shape[2])
