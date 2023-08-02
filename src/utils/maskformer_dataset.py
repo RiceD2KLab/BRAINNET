@@ -10,6 +10,7 @@ from torch.utils.data import Dataset
 from typing import List
 
 from utils.data_handler import DataHandler, MriType, StructuralScan
+from scipy.ndimage import gaussian_filter, map_coordinates
 
 seed = 100
 torch.manual_seed(seed)
@@ -120,12 +121,13 @@ class MaskformerMRIDataset(Dataset):
             # # Image Color Jittering
             # print("image mean, max=",image[:,:,0].mean(), image[:,:,0].max())
             pil_image = Image.fromarray(image.astype(np.uint8))
-            color_jitter = torchvision.transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
-            pil_image = color_jitter(pil_image)
+            # color_jitter = torchvision.transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
+            # pil_image = color_jitter(pil_image)
             
-            gamma_factor = 1.5 
-            enhancer = ImageEnhance.Contrast(pil_image)
-            pil_image = enhancer.enhance(gamma_factor)
+            if random.random() <= 0.5:
+                gamma_factor = 1.6
+                enhancer = ImageEnhance.Contrast(pil_image)
+                pil_image = enhancer.enhance(gamma_factor)
 
             image = np.array(pil_image)
             # print("image mean, max=",image[:,:,0].mean(), image[:,:,0].max())
@@ -142,13 +144,13 @@ class MaskformerMRIDataset(Dataset):
             # print("image mean, max=",image[0,:,:].mean(), image[0,:,:].max())
 
             # Apply random horizontal flip to image and mask
-            if np.random.random() > 0.5:
+            if random.random() <= 0.3:
                 image = TF.hflip(image)
                 instance_seg = TF.hflip(instance_seg)
 
             # Apply random crop to both the image and mask (as tensors)
             factor1 = 0.8
-            if random.random() > 0.2:
+            if random.random() <= 0.2:
                 chance1 = random.choice([0,1,2,3,4])
                 dim1 = image.shape
                 # print('Original image dimension:',dim1,'choice:',chance1)
@@ -169,8 +171,8 @@ class MaskformerMRIDataset(Dataset):
                                                   int(dim1[2]*(1-factor1)*0.5):int(dim1[2]*(1+factor1)*0.5)]
                     instance_seg = instance_seg[:,int(dim1[1]*(1-factor1)*0.5):int(dim1[1]*(1+factor1)*0.5), \
                                                   int(dim1[2]*(1-factor1)*0.5):int(dim1[2]*(1+factor1)*0.5)]
-
-            #change back to ndarray
+                    
+            # change back to ndarray
             image = image.numpy()
             instance_seg = instance_seg.numpy()
             instance_seg = instance_seg[0,:,:]
