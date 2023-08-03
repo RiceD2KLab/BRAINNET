@@ -6,36 +6,6 @@ import utils.mri_common as mri
 from PIL import Image
 
 
-def plot_scan_stats(stats_arr, struct_scan_list, figsize=(20, 4)):
-    """
-    Plots scan statistics measured in utils.mri_common.get_data_stats
-
-    Inputs:
-        stats_arr - numpy ndarray returned from utils.mri_common.get_data_stats
-        struct_scan_list - a list of strings of scan types
-        figsize - tuple of ints for figure size, default is (20, 4)
-
-    Returns None
-    """
-    # set number of scans
-    n_scans = len(struct_scan_list)
-
-    # build the figure
-    fig, axes = plt.subplots(nrows=1, ncols=n_scans, figsize=figsize)
-
-    for idx, axs in enumerate(axes):
-        axs.plot(stats_arr[:, idx, 0], label='mean')
-        axs.plot(stats_arr[:, idx, 1], label='std')
-        axs.plot(stats_arr[:, idx, 2], label='min')
-        axs.plot(stats_arr[:, idx, 3], label='max')
-        axs.set_title(f"stats for {struct_scan_list[idx]}")
-        axs.legend()
-        axs.set_xlabel('Patient ID')
-        axs.set_ylabel('Value')
-
-    plt.show()
-
-
 class MRIPlotter:
 
     def set_axis_config(self, axs_element):
