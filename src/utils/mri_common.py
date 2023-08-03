@@ -293,21 +293,53 @@ def plot_scan_stats(stats_arr, struct_scan_list, figsize=(20, 4)):
     plt.show()
 
 
-def normalize_and_save(subjects_list, struct_scan_list, data_dir, output_dir):
+def get_subdir(subj, target_dir, train_list, val_list, test_list):
     """
-    Normalizes all structural scans and saves them to disk
+    Helper function to identify which subdirectory
+    a given subject should be placed according to
+    the train/val/test split lists
+
+    Inputs -
+        subj - str, unique subject id
+        target_dir - str, top-level directory containing train/val/test subdirs
+        train_list - list of strings of unique subject ids in train set
+        val_list - list of strings of unique subject ids in val set
+        test_list - list of strings of unique subject ids in test set
+
+    Returns a str
+    """
+    if subj in train_list:
+        return os.path.join(target_dir, "train")
+    elif subj in val_list:
+        return os.path.join(target_dir, "val")
+    else:
+        return os.path.join(target_dir, "test")
+
+
+def normalize_and_save(subjects_list, struct_scan_list, data_dir, output_dir, train_list, val_list, test_list):
+    """
+    Normalizes all structural scans and saves them to disk,
+    sorted into subdirectories train/val/test depending on
+    which set the subject belongs.
 
     Inputs:
         subjects_list - list of strings of unique subject ids
         struct_scan_list - list of strings representing scan types
         data_dir - str path to data dir
         output_dir - str path to output directory
+        train_list - list of strings of unique subject ids in train set
+        val_list - list of strings of unique subject ids in val set
+        test_list - list of strings of unique subject ids in test set
 
     Returns None
     """
     # check if output dir exists, and if not, make it
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+        # make subdirectories for train/val/test data
+        os.makedirs(os.path.join(output_dir, "train"))
+        os.makedirs(os.path.join(output_dir, "val"))
+        os.makedirs(os.path.join(output_dir, "test"))
 
     # set the number of subjects
     n_subjects = len(subjects_list)
@@ -340,19 +372,31 @@ def normalize_and_save(subjects_list, struct_scan_list, data_dir, output_dir):
             # setup output file
             output_scan = nib.Nifti1Image(scan_norm, affine, header)
 
+            # get train/val/test subdirectory for current subj
+            subdir = get_subdir(
+                subj_file,
+                output_dir,
+                train_list,
+                val_list,
+                test_list
+            )
+            output_scan_path = os.path.join(subdir, f"{subj_file}_11_{struct_scan}.nii.gz")
             # write to disk
-            output_scan_path = os.path.join(output_dir, f"{subj_file}_11_{struct_scan}.nii.gz")
             nib.save(output_scan, output_scan_path)
 
 
-def copy_segm_files(latent_space_norm_dir, segm_dir):
+def copy_segm_files(latent_space_norm_dir, segm_dir, subjects_list, train_list, val_list, test_list):
     """
     Copies associated SEGM annotation masks from reduced data dir to
-    normalized latent space dir
+    normalized latent space dir, sorted into train/val/test subdirs
 
     Inputs:
         latent_space_norm_dir - str path to normalized latent space data
         segm_dir - str path to reduced dims data containing segm masks
+        subjects_list - list of strings of unique subject ids
+        train_list - list of strings of unique subject ids in train set
+        val_list - list of strings of unique subject ids in val set
+        test_list - list of strings of unique subject ids in test set
 
     Returns None
     """
@@ -368,8 +412,14 @@ def copy_segm_files(latent_space_norm_dir, segm_dir):
         if nii.split('_')[2] == 'segm':
             segm_files.append(nii)
 
+    # check that the number of segm masks is the same
+    # as the number of subjects
+    assert len(segm_files) == len(subjects_list)
+
     # copy segm files into latent space normalized dir
-    for segm in segm_files:
+    # note that segm_files and subjects_list are sorted
+    # so we are guaranteed that they will match 1-1
+    for segm, subj in zip(segm_files, subjects_list):
         # specify where the file is coming from
         source_file = os.path.join(segm_dir, segm)
 
@@ -379,7 +429,14 @@ def copy_segm_files(latent_space_norm_dir, segm_dir):
         segm_name = f"{segm_split_name[0]}_11_segm.nii.gz"
 
         # specify the output directory
-        dest_file = os.path.join(latent_space_norm_dir, segm_name)
+        subdir = get_subdir(
+            subj,
+            latent_space_norm_dir,
+            train_list,
+            val_list,
+            test_list
+        )
+        dest_file = os.path.join(subdir, segm_name)
 
         # copy the file
         with open(source_file, 'rb') as input_file:
