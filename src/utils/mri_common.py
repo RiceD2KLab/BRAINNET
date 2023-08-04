@@ -51,7 +51,7 @@ def get_mri_slice_file_name(file_name):
     # result: UPENN-GBM-00006_1.nii.gz
     if file_name.strip().split('.')[-1] == 'gz':
         return file_name.strip().split('_')[0] + \
-                    "_" + file_name.strip().split('_')[3]
+                    "_" + file_name.strip().split('_')[-1]
     return None
 
 
