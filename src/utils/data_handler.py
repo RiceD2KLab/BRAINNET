@@ -188,7 +188,7 @@ MRI_ONEDRIVE_INFO = {
     },
     MriType.VAL_LSV_2D_CROSS_FRONT.name: {
         "url": "",
-        "fname": "val_2d_lsv_cros_front",
+        "fname": "val_2d_lsv_cross_front",
         "unzip_path": "2D_slices_reduced_norm",
     },
     MriType.TEST_LSV_2D_CROSS_FRONT.name: {
