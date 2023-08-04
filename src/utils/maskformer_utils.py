@@ -47,7 +47,7 @@ def to_brats_mask(mask_3d):
     brats_mask_shape = list(mask_3d.shape)
     brats_mask_shape[0] = len(mri_common.BRATS_REGIONS)
     brats_mask =  np.zeros(tuple(brats_mask_shape), dtype=np.uint8)
-    
+
     for brats_region_idx, region_mapping in enumerate(mri_common.BRATS_REGIONS.items()):
         prev_brats_region = brats_mask[brats_region_idx, :, :, :]
         for sub_region in region_mapping[1]:
@@ -62,7 +62,7 @@ def mask_to_segmentation(mask_labels, class_labels):
     input_mask_mapping = {mask_idx: label_id for mask_idx, label_id in enumerate(class_labels)}
     input_mask_to_segm = np.vectorize(input_mask_mapping.get)(mask_labels.argmax(axis=0))
     return input_mask_to_segm.astype(np.uint8)
-    
+
 def post_proc_result_to_segmentation(results):
     # map results['segmentation'] to correct labels
     # note that id represents obj instances and can be different from label id
@@ -104,14 +104,14 @@ def get_subset_files(subj_files, file_no_min, file_no_max, subj_id_min, subj_id_
             # item has to be unique
             if subj_filename not in subj_filenames:
                 subj_filenames.append(subj_filename)
-    
+
     subj_sorted = sorted(subj_filenames, key=_extract_numeric_part)
     return subj_sorted
 
-def get_all_subj_ids(data_handler: DataHandler, mri_type: MriType):
+def get_all_subj_ids(data_handler: DataHandler, mri_type: MriType, local: bool=False):
     # Obtain full  dataset
     # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
-    all_slices = data_handler.list_mri_in_dir(mri_type=mri_type)
+    all_slices = data_handler.list_mri_in_dir(mri_type=mri_type, local=local)
 
     # get unique subj_ids: UPENN-GBM-00008, UPENN-GBM-00013 ...
     all_subjs = [mri_common.get_mri_subj(slice_2d) for slice_2d in all_slices]
@@ -200,7 +200,7 @@ def resize_mask(mask, original_size):
 def _extract_numeric_part(filename):
     # Expected filename: "UPENN-GBM-00131_50.nii.gz"
     # Split the filename based on underscore
-    
+
     parts = filename.split('_')
     if len(parts) == 2:
         prefix = parts[0]
