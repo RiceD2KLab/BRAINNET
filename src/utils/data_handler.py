@@ -29,9 +29,9 @@ class StructuralScan(str, Enum):
     T2 = "T2"
     T1GD = "T1GD"
     FLAIR = "FLAIR"
-    LATENT_VECTOR_1 = "LSV1"
-    LATENT_VECTOR_2 = "LSV2"
-    LATENT_VECTOR_3 = "LSV3"
+    LATENT_VECTOR_1 = "latent_vector_1"
+    LATENT_VECTOR_2 = "latent_vector_2"
+    LATENT_VECTOR_3 = "latent_vector_3"
 
 class MriType(Enum):
     STRUCT_SCAN = 1 # Original MRI Scans: FLAIR, T1, T1GD, T2
@@ -264,8 +264,7 @@ class DataHandler:
             os.makedirs(self.train_dir, exist_ok=True)
 
 
-    def load_mri(self, subj_id: str, mri_type: MriType, file_no: int = None, struct_scan: Union[StructuralScan, None] = None,
-                 return_nifti: bool = False, dtype: Union[type, np.dtype, None] = None):
+    def load_mri(self, subj_id: str, mri_type: MriType, file_no: int = None, struct_scan: Union[StructuralScan, None] = None, return_nifti: bool = False, dtype: Union[type, np.dtype, None] = None, local: bool=False):
         """
         Read MRI data from the specified subject file.
 
@@ -276,6 +275,7 @@ class DataHandler:
             struct_scan (Struct_Scan): Enum type forloading structural scan (e.g T1, T2, T1GD, FLAIR). Strictly use ENUM class for valid structural scans
             return_nifti (bool, optional): Flag indicating whether raw nifit. Defaults to False.
             dtype (str, optional): The data type of the MRI data e.g. uint16, uint8. If none, default is float.
+            local (boolean, option): Flag indicating whether data is local (runtime environment) or needs to be downloaded
 
         Returns:
             The MRI data in the specified format.
@@ -284,6 +284,7 @@ class DataHandler:
         # initialize data
         destination_path = None
         nifti = None
+
 
         # construct the full file path using a helper function
         mri_file_path = self._get_full_path(subj_id=subj_id, mri_type=mri_type, struct_scan=struct_scan, file_no=file_no)
@@ -297,11 +298,15 @@ class DataHandler:
             self.google_client.download_blob_as_file(mri_file_path, destination_path)
             nifti = nib.load(destination_path)
 
-        else:
+        elif not local:
             # if source is one drive
             # download and unzip if the files do not exist in the runtime yet
             self.download_from_onedrive(mri_type=mri_type)
 
+            nifti = nib.load(mri_file_path)
+
+        else:
+            # data is local
             nifti = nib.load(mri_file_path)
 
         # return uint8 if image being loaded is a segmentation image
@@ -635,16 +640,26 @@ class DataHandler:
 
         # build file name and supply the file path based on current onedrive folder structure
         # the case of structural images is different since each subject has its own folder
+        # note: for some unknown reason, comparing LSV MriType fails, so use .name attribute
         modelling_dataset = [
-            MriType.TRAIN_2D_DEPTH,
-            MriType.TRAIN_2D_CROSS_SIDE,
-            MriType.TRAIN_2D_CROSS_FRONT,
-            MriType.VAL_2D_DEPTH,
-            MriType.VAL_2D_CROSS_SIDE,
-            MriType.VAL_2D_CROSS_FRONT,
-            MriType.TEST_2D_DEPTH,
-            MriType.TEST_2D_CROSS_SIDE,
-            MriType.TEST_2D_CROSS_FRONT
+            MriType.TRAIN_2D_DEPTH.name,
+            MriType.TRAIN_2D_CROSS_SIDE.name,
+            MriType.TRAIN_2D_CROSS_FRONT.name,
+            MriType.VAL_2D_DEPTH.name,
+            MriType.VAL_2D_CROSS_SIDE.name,
+            MriType.VAL_2D_CROSS_FRONT.name,
+            MriType.TEST_2D_DEPTH.name,
+            MriType.TEST_2D_CROSS_SIDE.name,
+            MriType.TEST_2D_CROSS_FRONT.name,
+            MriType.TRAIN_LSV_2D_DEPTH.name,
+            MriType.VAL_LSV_2D_DEPTH.name,
+            MriType.TEST_LSV_2D_DEPTH.name,
+            MriType.TRAIN_LSV_2D_CROSS_SIDE.name,
+            MriType.VAL_LSV_2D_CROSS_SIDE.name,
+            MriType.TEST_LSV_2D_CROSS_SIDE.name,
+            MriType.TRAIN_LSV_2D_CROSS_FRONT.name,
+            MriType.VAL_LSV_2D_CROSS_FRONT.name,
+            MriType.TEST_LSV_2D_CROSS_FRONT.name
         ]
 
         if mri_type == MriType.STRUCT_SCAN:
@@ -666,7 +681,7 @@ class DataHandler:
         elif mri_type == MriType.ANNOTATED_REDUCED:
             file_name = f"{file_name}_11_segm_cut"
 
-        elif mri_type in modelling_dataset:
+        elif mri_type.name in modelling_dataset:
             if struct_scan is not None:
                 file_name = f"{file_name}_11_{struct_scan}_{file_no}"
             else:
