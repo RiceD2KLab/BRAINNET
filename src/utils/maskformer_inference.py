@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 
 from torch.utils.data import DataLoader
 from transformers import (MaskFormerImageProcessor, MaskFormerModel)
-from typing import List
+from typing import List, Literal
 from albumentations import Compose
 
 # local imports
@@ -46,7 +46,7 @@ def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
 
 class MaskFormerInference():
 
-    def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, upscaled_transform: Compose, scale_to_orig_size=True, orig_transform: Compose=None, orig_dim: tuple=None, local: bool=False):
+    def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, upscaled_transform: Compose, scale_to_orig_size=True, orig_transform: Compose=None, orig_dim: tuple=None, local: bool=False, data_type: Literal["regular", "latent_space_vector"]="regular"):
 
         if scale_to_orig_size == True:
             assert orig_transform is not None, "provide orig_transform with unscaled image. otherwise, set 'scale_to_orig_size' param to false"
@@ -69,6 +69,11 @@ class MaskFormerInference():
 
         # is the data local or remote
         self.local = local
+
+        # specify the data type
+        # "regular" = T1, T1GD, FLAIR
+        # "latent_space_vector" are latent space vectors
+        self.data_type = data_type
 
         # predict transform
         self.upscaled_transform = upscaled_transform
@@ -112,8 +117,10 @@ class MaskFormerInference():
                                        data_identifier=self.data_identifier,
                                        data_list=data_list,
                                        processor=self.processor,
+                                       data_type=self.data_type,
                                        transform=self.upscaled_transform,
-                                       augment=False)
+                                       augment=False,
+                                       local=self.local)
         dataloader_upscale = DataLoader(dataset_upscaled, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         # initalize 3d variables using shape of first input
@@ -126,8 +133,10 @@ class MaskFormerInference():
                                         data_identifier=self.data_identifier,
                                         data_list=data_list,
                                         processor=self.processor,
+                                        data_type=self.data_type,
                                         transform=self.orig_transform,
-                                        augment=False)
+                                        augment=False,
+                                        local=self.local)
             dataloader_orig = DataLoader(dataset_orig, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
             first_img_shape = dataset_orig[0]["pixel_values"].shape
         else:
