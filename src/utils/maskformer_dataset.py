@@ -7,7 +7,7 @@ import torchvision.transforms.functional as TF
 from PIL import Image
 from torch import from_numpy
 from torch.utils.data import Dataset
-from typing import List
+from typing import List, Literal
 
 from utils.data_handler import DataHandler, MriType, StructuralScan
 
@@ -16,7 +16,7 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 random.seed(seed)
 
-# useful reference: 
+# useful reference:
 # https://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 # https://blog.paperspace.com/dataloaders-abstractions-pytorch/
 
@@ -34,7 +34,7 @@ def collate_fn(batch):
 class MaskformerMRIDataset(Dataset):
     """Image segmentation dataset."""
 
-    def __init__(self, data_handler: DataHandler, data_identifier: MriType, data_list: List[str], processor, transform=None, augment=None):
+    def __init__(self, data_handler: DataHandler, data_identifier: MriType, data_list: List[str], processor, data_type: Literal["regular", "latent_space_vector"] = "regular", transform=None, augment=None, local: bool=False):
         """
         Args:
             dataset
@@ -45,6 +45,25 @@ class MaskformerMRIDataset(Dataset):
         self.processor = processor
         self.transform = transform
         self.augment = augment
+
+        # specify whether the data is local or remote
+        self.local = local  # False means remote, True means local
+
+        # identify what type of data is coming in
+        assert data_type == "regular" or data_type == "latent_space_vector", f"{data_type} is not a valid option."
+        self.data_type = data_type
+        # based on data_type, we can set what to expect for the channels
+        if self.data_type == "regular":
+            # regular structural scans
+            self.channel_1 = StructuralScan.FLAIR
+            self.channel_2 = StructuralScan.T1
+            self.channel_3 = StructuralScan.T1GD
+        else:
+            # latent space vectors!
+            self.channel_1 = StructuralScan.LATENT_VECTOR_1
+            self.channel_2 = StructuralScan.LATENT_VECTOR_2
+            self.channel_3 = StructuralScan.LATENT_VECTOR_3
+            self.local = True
 
         # use the Data Handler class to handle all sorts of image loading
         self.data_handler = data_handler
@@ -75,8 +94,16 @@ class MaskformerMRIDataset(Dataset):
         # load data file to image and instance_seg
         # return nifti=True to return format before converting to numpy get_fdata
 
-        data_cur, data_cur_nifti = self.data_handler.load_mri(subj_id = subj_no, file_no=file_no, mri_type = self.mri_type,
-                                              struct_scan = StructuralScan.FLAIR, return_nifti=True)
+        # load channel 1
+        data_cur, data_cur_nifti = self.data_handler.load_mri(
+            subj_id=subj_no,
+            file_no=file_no,
+            mri_type=self.mri_type,
+            struct_scan=self.channel_1,
+            return_nifti=True,
+            local=self.local
+        )
+
         # print(data_cur.shape)
         n_h = data_cur_nifti.shape[0]
         n_w = data_cur_nifti.shape[1]
@@ -86,14 +113,34 @@ class MaskformerMRIDataset(Dataset):
         image[:,:,0] = data_cur * 255
         # print("image mean, max=",image[:,:,0].mean(), image[:,:,0].max())
 
-        data_cur = self.data_handler.load_mri(subj_id = subj_no, file_no=file_no, mri_type = self.mri_type, struct_scan = StructuralScan.T1)
+        # load channel 2
+        data_cur = self.data_handler.load_mri(
+            subj_id=subj_no,
+            file_no=file_no,
+            mri_type=self.mri_type,
+            struct_scan=self.channel_2,
+            local=self.local
+        )
         image[:,:,1] = data_cur * 255
 
-        data_cur = self.data_handler.load_mri(subj_id = subj_no, file_no=file_no, mri_type = self.mri_type, struct_scan = StructuralScan.T1GD)
+        # load channel 3
+        data_cur = self.data_handler.load_mri(
+            subj_id=subj_no,
+            file_no=file_no,
+            mri_type=self.mri_type,
+            struct_scan=self.channel_3,
+            local=self.local
+        )
         image[:,:,2] = data_cur * 255
 
         # load segm file
-        data_cur = self.data_handler.load_mri(subj_id = subj_no, file_no=file_no, mri_type = self.mri_type, dtype=np.uint8)
+        data_cur = self.data_handler.load_mri(
+            subj_id=subj_no,
+            file_no=file_no,
+            mri_type=self.mri_type,
+            dtype=np.uint8,
+            local=self.local,
+        )
         instance_seg =  np.zeros( (n_h, n_w), dtype=np.uint8)
         instance_seg[:,:] = data_cur
         # print(instance_seg.max())
@@ -104,7 +151,7 @@ class MaskformerMRIDataset(Dataset):
         mapping_dict[2] = 2
         mapping_dict[4] = 3
         # mapping_dict[4] = 4
-        
+
         # Use NumPy's vectorize() function to apply the mapping function to each element in the original array
         class_id_map = np.vectorize(lambda x: mapping_dict[x])(instance_seg)
         class_labels = np.unique(class_id_map)
