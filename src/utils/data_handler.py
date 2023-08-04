@@ -563,6 +563,7 @@ class DataHandler:
         # iterate over train/val/test dirs and extract 2d slices
         input_dir_list = [loaded_3d_mri_dir_train, loaded_3d_mri_dir_val, loaded_3d_mri_dir_test]
         output_dir_list = [train_dir, val_dir, test_dir]
+        print('Extracting 2D slices from 3D volumes (now is a good time to take a 15 min coffee break ...)')
         for in_subdir, out_subdir in tqdm(zip(input_dir_list, output_dir_list), total=len(input_dir_list)):
             print(f"Working on {in_subdir} --> {out_subdir}")
             # call self._extract_2d_slices()
