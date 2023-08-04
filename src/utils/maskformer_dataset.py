@@ -63,7 +63,6 @@ class MaskformerMRIDataset(Dataset):
             self.channel_1 = StructuralScan.LATENT_VECTOR_1
             self.channel_2 = StructuralScan.LATENT_VECTOR_2
             self.channel_3 = StructuralScan.LATENT_VECTOR_3
-            self.local = True
 
         # use the Data Handler class to handle all sorts of image loading
         self.data_handler = data_handler
