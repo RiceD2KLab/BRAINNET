@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import nibabel as nib
 import shutil
 
+# Map mask annotation labels to medical terms
 SEGMENTS = {
     0: "ELSE",
     1: "NCR",
@@ -14,6 +15,7 @@ SEGMENTS = {
     3: "ET"
 }
 
+# Map mask annotation labels to colors for visualization
 SEGMENT_COLORS = {
     0: "gray",
     1: "red",
@@ -21,7 +23,7 @@ SEGMENT_COLORS = {
     3: "yellow"
 }
 
-
+# Map BRATS mask annotation names to data mask annotation labels
 BRATS_REGIONS = {
     "ELSE": [0],
     "WT": [1, 2, 3], # ET + NT + ED
@@ -31,6 +33,18 @@ BRATS_REGIONS = {
 
 
 def get_mri_subj_id(file_name):
+    """
+    Given a file name of an MRI 3D volume, extract
+    the unique patient id number
+
+    Ex: file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
+    subj_id: 00006
+
+    Inputs:
+        file_name - str, represents a NIFTI1 format volume
+
+    Returns a string or None.
+    """
     # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
     # subj_id: 00006
     if file_name.strip().split('.')[-1] == 'gz':
@@ -39,6 +53,18 @@ def get_mri_subj_id(file_name):
 
 
 def get_mri_subj(file_name):
+    """
+    Given a file name of an MRI 3D volume, extract
+    the entire subject name
+
+    Ex: file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
+    result: UPENN-GBM-00006
+
+    Inputs:
+        file_name - str, represents a NIFTI1 format volume
+
+    Returns a string or None.
+    """
     # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
     # result: UPENN-GBM-00006
     if file_name.strip().split('.')[-1] == 'gz':
@@ -47,6 +73,20 @@ def get_mri_subj(file_name):
 
 
 def get_mri_slice_file_name(file_name):
+    """
+    Given a file name of an MRI 2D image slice, extract
+    the subject name and the slice index number for
+    determining how many unique 2D slices exist for
+    a patient.
+
+    Ex: UPENN-GMB-00006_11_FLAIR_1.nii.gz
+    result: UPENN-GBM-00006_1.nii.gz
+
+    Inputs:
+        file_name - str, represents a NIFTI1 format volume
+
+    Returns a string or None.
+    """
     # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
     # result: UPENN-GBM-00006_1.nii.gz
     if file_name.strip().split('.')[-1] == 'gz':
@@ -56,6 +96,19 @@ def get_mri_slice_file_name(file_name):
 
 
 def get_mri_file_no(file_name):
+    """
+    Given a file name of an MRI 3D volume, extract the
+    patient's image status code.
+
+    Code 11 indicates pre-tumor resection (surgical removal)
+    Code 21 indicates post-tumor resection
+
+    Ex: file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
+    file_no: 11
+
+    Inputs:
+        file_name - str, represents a NIFTI format volume
+    """
     # file_name: UPENN-GBM-00006_11_FLAIR_1.nii.gz
     # file_no: 11
     if file_name.strip().split('.')[-1] == 'gz':
@@ -64,6 +117,16 @@ def get_mri_file_no(file_name):
 
 
 def get_largest_tumor_slice_idx(img_data, sum=False):
+    """
+    Determines the index of the slice with the largest tumor area.
+    Default method is to count nonzero pixels. Optionally can use
+    summation.
+
+    Inputs:
+        img_data - numpy ndarray
+        sum - bool (default False),
+    Returns a tuple of slice_idx (int) and number of non-zero pixels (int)
+    """
     non_zero_x = np.count_nonzero(img_data, axis=0)
     if sum is True:
         non_zero_x = np.sum(img_data, axis=0)
