@@ -21,6 +21,16 @@ random.seed(seed)
 # https://blog.paperspace.com/dataloaders-abstractions-pytorch/
 
 def collate_fn(batch):
+    """
+    Custom collate function used by torch.utils.data.DataLoader class
+    Defines a collation dictionary mapping the different entities we track
+    through the batches as data flows through MaskFormer.
+
+    Inputs:
+        batch - a batch of data from MaskformerMRIDataset of size batch size
+
+    Returns a mapping dictionary
+    """
     return {
             "pixel_values": torch.stack([example["pixel_values"] for example in batch]),
             "pixel_mask": torch.stack([example["pixel_mask"] for example in batch]),
@@ -72,9 +82,16 @@ class MaskformerMRIDataset(Dataset):
         self.n_data = len(self.data_list)
 
     def __len__(self):
+        """
+        custom definition of __len__ method to return class attribute self.n_data
+        """
         return self.n_data
 
     def __getitem__(self, idx):
+        """
+        custom defintion of __getitem__ method defining how to iterate over custom
+        dataset
+        """
 
         if idx >= self.n_data:
             print("warning: given index",idx,"does not exist in data. Using firs sample instead.")
