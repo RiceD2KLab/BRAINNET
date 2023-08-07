@@ -413,7 +413,7 @@ def normalize_and_save(subjects_list, struct_scan_list, data_dir, output_dir, tr
         train_list - list of strings of unique subject ids in train set
         val_list - list of strings of unique subject ids in val set
         test_list - list of strings of unique subject ids in test set
-
+        scan_type - str, default 'struct' or 'latent_vector'
     Returns None
     """
     # check if output dir exists, and if not, make it
