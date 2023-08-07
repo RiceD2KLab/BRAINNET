@@ -1,15 +1,14 @@
 '''Common functions used by maskformer (segmentation)'''
 import cv2
-import torch
-import numpy as np
+import os
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
 from typing import List
 
 # local imports
 import utils.mri_common as mri_common
 from utils.mri_plotter import MRIPlotter
-
-from utils.data_handler import DataHandler, MriType
 
 mri_plt = MRIPlotter()
 
@@ -108,10 +107,10 @@ def get_subset_files(subj_files, file_no_min, file_no_max, subj_id_min, subj_id_
     subj_sorted = sorted(subj_filenames, key=_extract_numeric_part)
     return subj_sorted
 
-def get_all_subj_ids(data_handler: DataHandler, mri_type: MriType, local: bool=False):
+def get_all_subj_ids(data_dir):
     # Obtain full  dataset
     # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
-    all_slices = data_handler.list_mri_in_dir(mri_type=mri_type, local=local)
+    all_slices = os.listdir(data_dir)
 
     # get unique subj_ids: UPENN-GBM-00008, UPENN-GBM-00013 ...
     all_subjs = [mri_common.get_mri_subj(slice_2d) for slice_2d in all_slices]

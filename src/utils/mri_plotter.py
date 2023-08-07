@@ -17,21 +17,6 @@ class MRIPlotter:
     All access is through plotting methods.
     """
 
-    def set_axis_config(self, axs_element):
-        """
-        Helper function to set default fontsizes
-
-        Inputs:
-            axs_element - matplotlib.pyplot.axes object
-
-        Returns None.
-        """
-        axs_element.tick_params(axis='x', labelsize=18)
-        axs_element.tick_params(axis='y', labelsize=18)
-        axs_element.title.set_fontsize(18)
-        axs_element.yaxis.label.set_size(18)
-        axs_element.xaxis.label.set_size(18)
-
     def plot_img(self, img_data, fig, axs, row, col, title=None, cmap=None, alpha=None, colorbar=False, **kwargs):
         '''
         Ensures common parameters for all MRI plots
@@ -56,10 +41,10 @@ class MRIPlotter:
         if colorbar:
             fig.colorbar(img, ax=axs_element, fraction=0.05)
 
-        self.set_axis_config(axs_element)
-
-        axs_element.set_xlabel("pixels")
-        axs_element.set_ylabel("pixels")
+        # turn off scale
+        axs_element.title.set_fontsize(18)
+        axs_element.xaxis.set_visible(False)
+        axs_element.yaxis.set_visible(False)
 
         return img
 

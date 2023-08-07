@@ -1,15 +1,14 @@
 import numpy as np
 import random
 import torch
-import torchvision
 import torchvision.transforms.functional as TF
 
 from PIL import Image, ImageEnhance
-from torch import from_numpy
 from torch.utils.data import Dataset
+from transformers import MaskFormerImageProcessor
 from typing import List, Literal
 
-from utils.data_handler import DataHandler, MriType, StructuralScan
+from utils.data_handler import DataHandler, StructuralScan, LatentVector
 
 seed = 100
 torch.manual_seed(seed)
@@ -44,20 +43,23 @@ def collate_fn(batch):
 class MaskformerMRIDataset(Dataset):
     """Image segmentation dataset."""
 
-    def __init__(self, data_handler: DataHandler, data_identifier: MriType, data_list: List[str], processor, data_type: Literal["regular", "latent_space_vector"] = "regular", transform=None, augment=None, local: bool=False):
+    def __init__(self, 
+                 data_handler: DataHandler, 
+                 data_list: List[str], 
+                 data_dir: str,
+                 processor: MaskFormerImageProcessor,
+                 data_type: Literal["regular", "latent_space_vector"] = "regular", 
+                 transform=None, 
+                 augment=None):
         """
         Args:
             dataset
         """
-        # Valid types: MriType.TRAIN_2D_DEPTH, MriType.VAL_2D_DEPTH, TEST_2D_DEPTH etc.
-        self.mri_type = data_identifier
-
+        # Valid types: 
+        self.data_dir = data_dir
         self.processor = processor
         self.transform = transform
         self.augment = augment
-
-        # specify whether the data is local or remote
-        self.local = local  # False means remote, True means local
 
         # identify what type of data is coming in
         assert data_type == "regular" or data_type == "latent_space_vector", f"{data_type} is not a valid option."
@@ -70,9 +72,9 @@ class MaskformerMRIDataset(Dataset):
             self.channel_3 = StructuralScan.T1GD
         else:
             # latent space vectors!
-            self.channel_1 = StructuralScan.LATENT_VECTOR_1
-            self.channel_2 = StructuralScan.LATENT_VECTOR_2
-            self.channel_3 = StructuralScan.LATENT_VECTOR_3
+            self.channel_1 = LatentVector.LATENT_VECTOR_1
+            self.channel_2 = LatentVector.LATENT_VECTOR_2
+            self.channel_3 = LatentVector.LATENT_VECTOR_3
 
         # use the Data Handler class to handle all sorts of image loading
         self.data_handler = data_handler
@@ -114,10 +116,9 @@ class MaskformerMRIDataset(Dataset):
         data_cur, data_cur_nifti = self.data_handler.load_mri(
             subj_id=subj_no,
             file_no=file_no,
-            mri_type=self.mri_type,
             struct_scan=self.channel_1,
             return_nifti=True,
-            local=self.local
+            local_path=self.data_dir
         )
 
         # print(data_cur.shape)
@@ -133,9 +134,8 @@ class MaskformerMRIDataset(Dataset):
         data_cur = self.data_handler.load_mri(
             subj_id=subj_no,
             file_no=file_no,
-            mri_type=self.mri_type,
             struct_scan=self.channel_2,
-            local=self.local
+            local_path=self.data_dir
         )
         image[:,:,1] = data_cur * 255
 
@@ -143,9 +143,8 @@ class MaskformerMRIDataset(Dataset):
         data_cur = self.data_handler.load_mri(
             subj_id=subj_no,
             file_no=file_no,
-            mri_type=self.mri_type,
             struct_scan=self.channel_3,
-            local=self.local
+            local_path=self.data_dir
         )
         image[:,:,2] = data_cur * 255
 
@@ -153,9 +152,8 @@ class MaskformerMRIDataset(Dataset):
         data_cur = self.data_handler.load_mri(
             subj_id=subj_no,
             file_no=file_no,
-            mri_type=self.mri_type,
             dtype=np.uint8,
-            local=self.local,
+            local_path=self.data_dir,
         )
         instance_seg =  np.zeros( (n_h, n_w), dtype=np.uint8)
         instance_seg[:,:] = data_cur
@@ -182,8 +180,8 @@ class MaskformerMRIDataset(Dataset):
 
             # # Image Color Jittering
             pil_image = Image.fromarray(image.astype(np.uint8))
-#            color_jitter = torchvision.transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
-#            pil_image = color_jitter(pil_image)
+            # color_jitter = torchvision.transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
+            # pil_image = color_jitter(pil_image)
 
             # apply contrast
             if random.random() <= 0.5:

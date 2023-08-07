@@ -46,7 +46,14 @@ def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
 
 class MaskFormerInference():
 
-    def __init__(self, data_handler: DataHandler, data_identifier: MriType, model: MaskFormerModel, processor: MaskFormerImageProcessor, upscaled_transform: Compose, scale_to_orig_size=True, orig_transform: Compose=None, orig_dim: tuple=None, local: bool=False, data_type: Literal["regular", "latent_space_vector"]="regular"):
+    def __init__(self, data_handler: DataHandler,
+                 data_dir: str,
+                 model: MaskFormerModel, 
+                 processor: MaskFormerImageProcessor, 
+                 upscaled_transform: Compose, scale_to_orig_size=True, 
+                 orig_transform: Compose=None, 
+                 orig_dim: tuple=None,
+                 data_type: Literal["regular", "latent_space_vector"]="regular"):
 
         if scale_to_orig_size == True:
             assert orig_transform is not None, "provide orig_transform with unscaled image. otherwise, set 'scale_to_orig_size' param to false"
@@ -57,18 +64,14 @@ class MaskFormerInference():
         self.processor = processor
         self.scale_to_orig_size = scale_to_orig_size
 
-        # specifies which dataset to use
-        # eg: train depth, train cross side, val cross front
-        self.data_identifier = data_identifier
+        # specifies the directory to use
+        self.data_dir = data_dir
 
         # no resize transform
         self.orig_transform = orig_transform
 
         # original dimensions of the file
         self.orig_dim = orig_dim
-
-        # is the data local or remote
-        self.local = local
 
         # specify the data type
         # "regular" = T1, T1GD, FLAIR
@@ -79,7 +82,7 @@ class MaskFormerInference():
         self.upscaled_transform = upscaled_transform
 
         # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
-        all_files_in_dir = self.data_handler.list_mri_in_dir(mri_type=data_identifier, local=self.local)
+        all_files_in_dir = self.data_handler.list_mri_in_dir(local_path=self.data_dir)
 
         # Just re-write to a format that the Maskformer DataLoader wants
         # UPENN-GBM-00040_122.nii.gz, UPENN-GBM-00073_20.nii.gz, UPENN-GBM-00016_139.nii.gz
@@ -105,22 +108,21 @@ class MaskFormerInference():
     def predict_patient_mask(self, subj_id: str, batch_size=10):
 
         print("Performing inference on", subj_id)
-        print("batch size", batch_size)
 
         # Get all slices for one patient or subj
         data_list = self.get_patient_slices(subj_id)
         num_slices = len(data_list)
+        print("Number of 2d slices for patient", num_slices)
         batch_size = batch_size
 
         # dataloader for upscaled dataset
         dataset_upscaled = MaskformerMRIDataset(data_handler=self.data_handler,
-                                       data_identifier=self.data_identifier,
+                                       data_dir=self.data_dir,
                                        data_list=data_list,
                                        processor=self.processor,
                                        data_type=self.data_type,
                                        transform=self.upscaled_transform,
-                                       augment=False,
-                                       local=self.local)
+                                       augment=False)
         dataloader_upscale = DataLoader(dataset_upscaled, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         # initalize 3d variables using shape of first input
@@ -130,13 +132,12 @@ class MaskFormerInference():
         dataloader_orig = None
         if self.scale_to_orig_size:
             dataset_orig = MaskformerMRIDataset(data_handler=self.data_handler,
-                                        data_identifier=self.data_identifier,
+                                        data_dir=self.data_dir,
                                         data_list=data_list,
                                         processor=self.processor,
                                         data_type=self.data_type,
                                         transform=self.orig_transform,
-                                        augment=False,
-                                        local=self.local)
+                                        augment=False)
             dataloader_orig = DataLoader(dataset_orig, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
             first_img_shape = dataset_orig[0]["pixel_values"].shape
         else:
