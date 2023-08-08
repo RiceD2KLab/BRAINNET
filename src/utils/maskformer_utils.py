@@ -8,8 +8,12 @@ from typing import List
 
 # local imports
 import utils.mri_common as mri_common
-from utils.mri_plotter import MRIPlotter
 
+import importlib
+import utils.mri_plotter as amsda
+importlib.reload(amsda)
+
+from utils.mri_plotter import MRIPlotter
 mri_plt = MRIPlotter()
 
 ADE_MEAN = np.array([123.675, 116.280, 103.530]) / 255
@@ -123,13 +127,13 @@ def plot_mask_labels(class_labels, pixel_values, mask_labels, title, scale=True)
     fig, axs = plt.subplots(nrows=1, ncols=n_image, figsize=(5*n_image, 5))
     denormalized_img = denormalize_img(pixel_values)
 
-    mri_plt.plot_img(img_data=denormalized_img, title=title, fig=fig, axs=axs, row=0, col=0, colorbar=True)
+    mri_plt.plot_img(img_data=denormalized_img, title=title, fig=fig, axs=axs, row=0, col=0, colorbar=False)
 
     # plot mask for each label
     for mask_idx, mask_id in enumerate(class_labels):
         visual_mask = scale_mask(mask_labels[mask_idx]) if scale else mask_labels[mask_idx]
         segment_name = mri_common.SEGMENTS[mask_id]
-        mri_plt.plot_img(img_data=visual_mask, title=segment_name, fig=fig, axs=axs, row=0, col=mask_idx+1, colorbar=True)
+        mri_plt.plot_img(img_data=visual_mask, title=segment_name, fig=fig, axs=axs, row=0, col=mask_idx+1, colorbar=False)
 
     plt.tight_layout()
     plt.show()
@@ -159,6 +163,7 @@ def plot_mask_comparison(input_class_labels, pred_class_labels, input_pixel_valu
                            legends=["input", "predicted"],
                            title=segment_name,
                            fig=fig, axs=axs, row=0, col=axs_idx)
+        
     plt.tight_layout()
     plt.show()
 

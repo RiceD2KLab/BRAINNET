@@ -6,13 +6,11 @@ import matplotlib.pyplot as plt
 import multiprocessing
 import pandas as pd
 import seaborn as sns
-import time
 from typing import List
 
 import utils.maskformer_utils as mf_utils
 import utils.metrics as metrics
 import utils.mri_common as mri_common
-
 from utils.mri_plotter import MRIPlotter
 from utils.data_handler import DataHandler
 from utils.metrics import MetricName

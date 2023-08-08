@@ -4,7 +4,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import utils.mri_common as mri
 from PIL import Image
-
+from matplotlib.font_manager import FontProperties
 
 class MRIPlotter:
     """
@@ -16,6 +16,21 @@ class MRIPlotter:
 
     All access is through plotting methods.
     """
+    
+    def set_axis_config(self, axs_element):
+        """
+        Helper function to set default fontsizes
+
+        Inputs:
+            axs_element - matplotlib.pyplot.axes object
+
+        Returns None.
+        """
+        axs_element.tick_params(axis='x', labelsize=18)
+        axs_element.tick_params(axis='y', labelsize=18)
+        axs_element.title.set_fontsize(24)
+        axs_element.yaxis.label.set_size(18)
+        axs_element.xaxis.label.set_size(18)
 
     def plot_img(self, img_data, fig, axs, row, col, title=None, cmap=None, alpha=None, colorbar=False, **kwargs):
         '''
@@ -41,8 +56,11 @@ class MRIPlotter:
         if colorbar:
             fig.colorbar(img, ax=axs_element, fraction=0.05)
 
-        # turn off scale
-        axs_element.title.set_fontsize(18)
+        # call common config to set size of titles/labels
+        self.set_axis_config(axs_element)
+        
+        # turn off scale for plotting mri 
+        # other plots can still use common config if they have scale
         axs_element.xaxis.set_visible(False)
         axs_element.yaxis.set_visible(False)
 
@@ -148,9 +166,11 @@ class MRIPlotter:
             handles = []
             for idx, color in enumerate(segment_colors):
                 handles.append(mpatches.Patch(color=color, label=segment_names[idx]))
-
+            
+            fontP = FontProperties()
+            fontP.set_size('20')  # or
             handle_loc = loc if not None else 'lower right'
-            axs_element.legend(handles=handles, loc=handle_loc)
+            axs_element.legend(handles=handles, loc=handle_loc, prop=fontP)
 
     def plot_masks(self, masks, fig, axs, row, col, title, legends, **kwargs):
         """
@@ -183,7 +203,7 @@ class MRIPlotter:
             handles.append(mpatches.Patch(color=color, label=legends[idx]))
 
         axs_element.legend(handles=handles, loc='upper left')
-
+        
     def _get_default_alpha(self, img_data):
         """
         Helper function for getting the default transparency mask

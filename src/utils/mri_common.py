@@ -6,15 +6,8 @@ import os
 import matplotlib.pyplot as plt
 import nibabel as nib
 import shutil
+import time
 
-from concurrent.futures import ProcessPoolExecutor
-from enum import Enum
-from tqdm.auto import tqdm
-from typing import List, Tuple
-
-from concurrent.futures import ProcessPoolExecutor
-from enum import Enum
-from tqdm.auto import tqdm
 from typing import List, Tuple
 
 # Map mask annotation labels to medical terms
@@ -40,11 +33,6 @@ BRATS_REGIONS = {
     "TC": [1, 3], # ET + necrotic tumor
     "ET": [3]
 }
-
-class SliceDirection(str, Enum):
-    DEPTH = "DEPTH"
-    CROSS_SIDE = "CROSS_SIDE"
-    CROSS_FRONT = "CROSS_FRONT"
 
 def get_mri_subj_id(file_name):
     """
@@ -148,6 +136,15 @@ def get_largest_tumor_slice_idx(img_data, sum=False):
     slice_idx = np.argmax(total_y)
     return slice_idx, total_y[slice_idx]
 
+def create_train_dir_by_date():
+    """
+    Creates training directory dynamically
+    using format maskformer/{unix_date}
+
+    Returns the path created.
+    """
+    now = str(int( time.time() ))
+    return os.path.join("maskformer", now)
 
 def split_subjects(input_list, split_ratio=0.8, seed=0):
     """
@@ -661,109 +658,4 @@ def reduce_data(new_dim:  Tuple[int, int, int, int, int, int],
     n_w = sliced_data.shape[1]
     n_d = sliced_data.shape[2]
     print('Dimension of Image are height:',n_h,'width:',n_w,'depth:',n_d)
-    
-
-def generate_2d_slices(input_dir: str, output_dir: str, orientation: SliceDirection):
-    """
-    Extracts 2d slices from a loaded 3D volumes in the specified orientation
-
-    orientation can be either "DEPTH", "CROSS_FRONT", or "CROSS_SIDE"
-
-    Returns None.
-    """
-    # specify directory paths
-    direction = orientation.name.lower()
-    output_train_dir = os.path.join(output_dir, "train", direction)
-    output_val_dir = os.path.join(output_dir, "val", direction)
-    output_test_dir = os.path.join(output_dir, "test", direction)
-
-    # create the directories, assume if train_dir does not exist
-    # then neither will val_dir nor test_dir
-    if not os.path.exists(output_train_dir):
-        os.makedirs(output_train_dir)
-        os.makedirs(output_val_dir)
-        os.makedirs(output_test_dir)
-
-    assert os.path.exists(input_dir)
-
-    # specify the train/val/test dirs for the loaded 3d mri
-    # utils.mri_common.normalize_and_save specifies the subdirs
-    # as train/val/test so as long as the volumes were generated
-    # using the function, we can expect the following structure:
-    # e.g. latent_space_vectors_annot_reduced_norm/train
-    # images_annot_reduced_norm/train
-    
-    loaded_3d_mri_dir_train = os.path.join(input_dir, "train")
-    loaded_3d_mri_dir_val = os.path.join(input_dir, "val")
-    loaded_3d_mri_dir_test = os.path.join(input_dir, "test")
-    print("loaded_3d_mri_dir_train", loaded_3d_mri_dir_train)
-    print("loaded_3d_mri_dir_val", loaded_3d_mri_dir_val)
-    print("loaded_3d_mri_dir_test", loaded_3d_mri_dir_test)
-    
-    # iterate over train/val/test dirs and extract 2d slices
-    input_dir_list = [loaded_3d_mri_dir_train, loaded_3d_mri_dir_val, loaded_3d_mri_dir_test]
-    output_dir_list = [output_train_dir, output_val_dir, output_test_dir]
-    print('Extracting 2D slices from 3D volumes (now is a good time to take 5 min coffee break ...)')
-    
-    for in_subdir, out_subdir in tqdm(zip(input_dir_list, output_dir_list), total=len(input_dir_list)):
-        print(f"Working on {in_subdir} --> {out_subdir}")
-        
-        _extract_2d_slices(
-            orientation=orientation,
-            input_dir=in_subdir,
-            output_dir=out_subdir
-        )
-    
-    return output_dir_list
-    
-def _extract_2d_slices(input_dir: str, output_dir: str, orientation: SliceDirection):
-    """
-    helper function to generate_2d_slices
-    """
-    # get a listing of files in the input directory
-    dir_list = os.listdir(input_dir)
-    
-    # process slices in parallel
-    with ProcessPoolExecutor() as executor:
-        list(tqdm(executor.map(_process_volume, 
-                               dir_list,
-                               [input_dir]*len(dir_list), 
-                               [output_dir]*len(dir_list), 
-                               [orientation]*len(dir_list)),
-                    total=len(dir_list)))
-        
-def _process_volume(infile, input_dir, output_dir, orientation):
-    # load the volume
-    nifti = nib.load(os.path.join(input_dir, infile))
-    # get the affine transformation matrix
-    affine = nifti.affine
-    # get the header
-    header = nifti.header
-    # get the dimensions
-    n_height, n_width, n_depth = tuple(nifti.header["dim"][1:4])
-
-    # determine expected # of slices and execute process in parallel
-    if orientation == SliceDirection.DEPTH:
-        # idx_range = range(n_depth)
-        for idx in range(n_depth):
-            sliced_data = nifti.get_fdata()[:, :, idx]
-            _process_slice(idx, sliced_data, affine, header, infile, output_dir)
-            
-    elif orientation == SliceDirection.CROSS_SIDE:
-        for idx in range(n_height):
-            sliced_data = nifti.get_fdata()[idx, :, :]
-            _process_slice(idx, sliced_data, affine, header, infile, output_dir)
-    elif orientation == SliceDirection.CROSS_FRONT:
-        for idx in range(n_width):
-            sliced_data = nifti.get_fdata()[:, idx, :]
-            _process_slice(idx, sliced_data, affine, header, infile, output_dir)
-
-
-def _process_slice(idx, sliced_data, affine, header, infile, output_dir):
-    # convert numpy array to Nifti1Image format
-    sliced_nifti = nib.Nifti1Image(sliced_data, affine, header)
-    
-    # save image
-    save_fn = f"{infile.split('.nii.gz')[0]}_{idx}.nii.gz"
-    nib.save(sliced_nifti, os.path.join(output_dir, save_fn))
     

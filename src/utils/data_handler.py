@@ -1,13 +1,14 @@
 import os
 import tempfile
 import torch
-import gzip
 import shutil
 import nibabel as nib
 import numpy as np
 
+from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
 from io import BytesIO
+from tqdm.auto import tqdm
 from typing import Union, Literal
 from onedrivedownloader import download
 
@@ -31,6 +32,11 @@ class LatentVector(str, Enum):
     LATENT_VECTOR_2 = "latent_vector_2"
     LATENT_VECTOR_3 = "latent_vector_3"
 
+class SliceDirection(str, Enum):
+    DEPTH = "DEPTH"
+    CROSS_SIDE = "CROSS_SIDE"
+    CROSS_FRONT = "CROSS_FRONT"
+    
 class MriType(Enum):
     STRUCT_SCAN = 1 # Original MRI Scans: FLAIR, T1, T1GD, T2
     AUTO_SEGMENTED = 2 # Predicted segmentation maps from previous winners of BraTS competition
@@ -40,7 +46,8 @@ class MriType(Enum):
     ANNOTATED_REDUCED = 6 # Reduced version of the manually annotated images
     ANNOTATED_REDUCED_NORM = 7 # Normalized versions of AUTO_SEGMENTED_REDUCED and STRUCT_SCAN_REDUCED
     LATENT_SPACE_VECTORS = 8
-    LATENT_SPACE_VECTORS_NORM = 9
+    LATENT_SPACE_VECTORS_NORM = 9,
+    ANNOTATED_REDUCED_NORM_2D = 10
 
 MRI_ONEDRIVE_INFO = {
     MriType.STRUCT_SCAN.name: {
@@ -83,7 +90,12 @@ MRI_ONEDRIVE_INFO = {
         "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EWiAVCh-RV1OqrF-doijvE0BYvKwiiNSV135dU6WNVbMJg",
         "fname": "latent_space_vectors_annot_reduced_norm",
         "unzip_path": "latent_space_vectors_annot_reduced_norm" # For .zip files without a subfolder, this will extract the files into the specified subfolder.
-    }
+    },
+    MriType.ANNOTATED_REDUCED_NORM_2D.name: {
+        "url": "https://rice-my.sharepoint.com/:u:/g/personal/hl9_rice_edu/EXHfaGJsMkpIgSej6BfEfs4BJ13HEcaiowZ8Zez85NqlHw",
+        "fname": "images_annot_reduced_norm_2d",
+        "unzip_path": "images_annot_reduced_norm_2d" # For .zip files without a subfolder, this will extract the files into the specified subfolder.
+    },
 }
 class DataHandler:
     """
@@ -175,6 +187,7 @@ class DataHandler:
         
             # normalized images have train/test/val
             if mri_type == MriType.ANNOTATED_REDUCED_NORM or \
+                mri_type == MriType.ANNOTATED_REDUCED_NORM_2D or \
                     mri_type == MriType.LATENT_SPACE_VECTORS_NORM:
                     assert dataset_type is not None, "Specify if train, val or test"
             
@@ -471,3 +484,128 @@ class DataHandler:
                 file_paths.append(file_name)
         return file_paths
 
+    def generate_2d_slices(self, input_dir: str = None, output_dir: str = None, orientation: SliceDirection = None,
+                        mri_type: Union[MriType, None] = None):
+        """
+        Extracts 2d slices from a loaded 3D volumes in the specified orientation
+
+        orientation can be either "DEPTH", "CROSS_FRONT", or "CROSS_SIDE"
+
+        Returns None.
+        """
+        if mri_type:
+            # this is so we won't have to generate our 2d slices many times during training.
+            # otherwise we just the function suplied with any input directory
+            
+            # attempt to download files to runtime first
+            self._download_from_onedrive(mri_type=mri_type)
+                
+            # get associated mri directory 
+            output_train_dir = self._get_mri_dir(mri_type=mri_type, dataset_type="train")
+            output_val_dir = self._get_mri_dir(mri_type=mri_type, dataset_type="val")
+            output_test_dir = self._get_mri_dir(mri_type=mri_type, dataset_type="test")
+            
+            return [output_train_dir, output_val_dir, output_test_dir]
+        
+        
+        # specify directory paths
+        direction = orientation.name.lower()
+        output_train_dir = os.path.join(output_dir, "train", direction)
+        output_val_dir = os.path.join(output_dir, "val", direction)
+        output_test_dir = os.path.join(output_dir, "test", direction)
+
+        # create the directories, assume if train_dir does not exist
+        # then neither will val_dir nor test_dir
+        if not os.path.exists(output_train_dir):
+            os.makedirs(output_train_dir)
+            os.makedirs(output_val_dir)
+            os.makedirs(output_test_dir)
+
+        assert os.path.exists(input_dir)
+
+        # specify the train/val/test dirs for the loaded 3d mri
+        # utils.mri_common.normalize_and_save specifies the subdirs
+        # as train/val/test so as long as the volumes were generated
+        # using the function, we can expect the following structure:
+        # e.g. latent_space_vectors_annot_reduced_norm/train
+        # images_annot_reduced_norm/train
+        
+        loaded_3d_mri_dir_train = os.path.join(input_dir, "train")
+        loaded_3d_mri_dir_val = os.path.join(input_dir, "val")
+        loaded_3d_mri_dir_test = os.path.join(input_dir, "test")
+        print("loaded_3d_mri_dir_train", loaded_3d_mri_dir_train)
+        print("loaded_3d_mri_dir_val", loaded_3d_mri_dir_val)
+        print("loaded_3d_mri_dir_test", loaded_3d_mri_dir_test)
+        
+        # iterate over train/val/test dirs and extract 2d slices
+        input_dir_list = [loaded_3d_mri_dir_train, loaded_3d_mri_dir_val, loaded_3d_mri_dir_test]
+        output_dir_list = [output_train_dir, output_val_dir, output_test_dir]
+        print('Extracting 2D slices from 3D volumes (now is a good time to take 5 min coffee break ...)')
+        
+        for in_subdir, out_subdir in tqdm(zip(input_dir_list, output_dir_list), total=len(input_dir_list)):
+            print(f"Working on {in_subdir} --> {out_subdir}")
+            
+            self._extract_2d_slices(
+                orientation=orientation,
+                input_dir=in_subdir,
+                output_dir=out_subdir
+            )
+        
+        return output_dir_list
+        
+    def _extract_2d_slices(self, input_dir: str, output_dir: str, orientation: SliceDirection):
+        """
+        helper function to generate_2d_slices
+        """
+        # get a listing of files in the input directory
+        dir_list = os.listdir(input_dir)
+        
+        # call _process_volume to create slices in parallel for each file
+        with ProcessPoolExecutor() as executor:
+            list(tqdm(executor.map(self._process_volume, 
+                                dir_list,
+                                [input_dir]*len(dir_list), 
+                                [output_dir]*len(dir_list), 
+                                [orientation]*len(dir_list)),
+                        total=len(dir_list)))
+            
+    def _process_volume(self, infile, input_dir, output_dir, orientation):
+        """
+        helper function called to generate 2d slices for 1 volume/1 patient
+        """
+        # load the volume
+        nifti = nib.load(os.path.join(input_dir, infile))
+        # get the affine transformation matrix
+        affine = nifti.affine
+        # get the header
+        header = nifti.header
+        # get the dimensions
+        n_height, n_width, n_depth = tuple(nifti.header["dim"][1:4])
+
+        # determine expected # of slices and execute process in parallel
+        if orientation == SliceDirection.DEPTH:
+            # idx_range = range(n_depth)
+            for idx in range(n_depth):
+                sliced_data = nifti.get_fdata()[:, :, idx]
+                self._process_slice(idx, sliced_data, affine, header, infile, output_dir)
+                
+        elif orientation == SliceDirection.CROSS_SIDE:
+            for idx in range(n_height):
+                sliced_data = nifti.get_fdata()[idx, :, :]
+                self._process_slice(idx, sliced_data, affine, header, infile, output_dir)
+        elif orientation == SliceDirection.CROSS_FRONT:
+            for idx in range(n_width):
+                sliced_data = nifti.get_fdata()[:, idx, :]
+                self._process_slice(idx, sliced_data, affine, header, infile, output_dir)
+
+
+    def _process_slice(self, idx, sliced_data, affine, header, infile, output_dir):
+        """
+        helper function to save the a 2d slice
+        """
+        # convert numpy array to Nifti1Image format
+        sliced_nifti = nib.Nifti1Image(sliced_data, affine, header)
+        
+        # save image
+        save_fn = f"{infile.split('.nii.gz')[0]}_{idx}.nii.gz"
+        nib.save(sliced_nifti, os.path.join(output_dir, save_fn))
