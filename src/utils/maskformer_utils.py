@@ -8,11 +8,6 @@ from typing import List
 
 # local imports
 import utils.mri_common as mri_common
-
-import importlib
-import utils.mri_plotter as amsda
-importlib.reload(amsda)
-
 from utils.mri_plotter import MRIPlotter
 mri_plt = MRIPlotter()
 

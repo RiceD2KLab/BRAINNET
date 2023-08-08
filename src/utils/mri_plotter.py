@@ -167,10 +167,8 @@ class MRIPlotter:
             for idx, color in enumerate(segment_colors):
                 handles.append(mpatches.Patch(color=color, label=segment_names[idx]))
             
-            fontP = FontProperties()
-            fontP.set_size('20')  # or
             handle_loc = loc if not None else 'lower right'
-            axs_element.legend(handles=handles, loc=handle_loc, prop=fontP)
+            axs_element.legend(handles=handles, loc=handle_loc)
 
     def plot_masks(self, masks, fig, axs, row, col, title, legends, **kwargs):
         """
