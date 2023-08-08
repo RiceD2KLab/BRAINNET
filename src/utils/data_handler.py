@@ -29,7 +29,7 @@ class LatentVector(str, Enum):
     LATENT_VECTOR_1 = "latent_vector_1"
     LATENT_VECTOR_2 = "latent_vector_2"
     LATENT_VECTOR_3 = "latent_vector_3"
-    
+
 class MriType(Enum):
     STRUCT_SCAN = 1 # Original MRI Scans: FLAIR, T1, T1GD, T2
     AUTO_SEGMENTED = 2 # Predicted segmentation maps from previous winners of BraTS competition
@@ -147,9 +147,9 @@ class DataHandler:
         os.makedirs(self.data_dir, exist_ok=True)
 
 
-    def load_mri(self, subj_id: str, 
-                 mri_type: Union[MriType, None]=None, 
-                 file_no: int=None, 
+    def load_mri(self, subj_id: str,
+                 mri_type: Union[MriType, None]=None,
+                 file_no: int=None,
                  struct_scan: Union[StructuralScan, LatentVector, None]=None,
                  dtype: Union[type, np.dtype, None]=None,
                  return_nifti: bool = False,
@@ -177,18 +177,18 @@ class DataHandler:
         # download and unzip if the files are from onedrive and do not exist in the runtime yet
         if mri_type is not None:
             self._download_from_onedrive(mri_type=mri_type)
-        
+
             # normalized images have train/test/val
             if mri_type == MriType.ANNOTATED_REDUCED_NORM or \
                 mri_type == MriType.ANNOTATED_REDUCED_NORM_2D or \
                     mri_type == MriType.LATENT_SPACE_VECTORS_NORM:
                     assert dataset_type is not None, "Specify if train, val or test"
-            
-                  
+
+
         # construct the full file path of the file
-        mri_file_path = self._get_mri_full_path(subj_id=subj_id, 
-                                           mri_type=mri_type, 
-                                           struct_scan=struct_scan, 
+        mri_file_path = self._get_mri_full_path(subj_id=subj_id,
+                                           mri_type=mri_type,
+                                           struct_scan=struct_scan,
                                            file_no=file_no,
                                            local_path=local_path,
                                            dataset_type=dataset_type)
@@ -216,15 +216,27 @@ class DataHandler:
         else:
             # return nifti.get_fdata() only
             return data
-        
-    def list_mri_in_dir(self, mri_type: [MriType, None]=None, sort: bool=True, local_path: str=None, 
+
+    def list_mri_in_dir(self, mri_type: [MriType, None]=None, sort: bool=True, local_path: str=None,
                         return_dir=False, dataset_type: Literal["train", "val", "test", None]=None):
+        """
+        Lists the MRI volumes in a specified directory
+
+        Args:
+            mri_type (Mri_Type): The type of MRI data being read (e.g. annotated, autosegmented, reduced). Strictly use ENUM class for valid types
+            sort (bool): Whether to sort the list of file names
+            local_path (str, optional): Local path to the dataset
+            return_dir (bool): Flag indicating whether to return directory path
+            dataset_type (str, optional): The dataset folder (e.g train, val, test)
+        Returns:
+            A list of strings representing MRI file names in specified directory
+        """
 
         if mri_type is not None:
             # attempt to download files to runtime first
             self._download_from_onedrive(mri_type=mri_type)
-                
-            # get associated mri directory 
+
+            # get associated mri directory
             mri_dir = self._get_mri_dir(mri_type=mri_type, dataset_type=dataset_type)
         else:
             # attempt to download files to runtime first
@@ -239,16 +251,26 @@ class DataHandler:
             all_files = self._list_mri_recurse(startpath=mri_dir)
         else:
             all_files = os.listdir(mri_dir)
-            
+
         if sort:
             all_files.sort()
-            
+
         if return_dir:
             return all_files, mri_dir
         else:
             return all_files
 
     def dir_exists(self, train_dir_prefix, use_cloud=True):
+        """
+        Determines whether a specified directory path exists
+
+        Args:
+            train_dir_prefix (str): path to train directory
+            use_could (bool): Flag indicating whether to search google storage bucket or local
+
+        Returns:
+            A boolean indicating whether path exists
+        """
         source_path = self._get_train_dir(file_name="", train_dir_prefix=train_dir_prefix)
         if use_cloud:
             blobs = self.google_client.list_blob_in_dir(source_path)
@@ -257,6 +279,17 @@ class DataHandler:
             return os.path.exists(source_path)
 
     def file_exists(self, train_dir_prefix, file_name, use_cloud=True):
+        """
+        Determines whether a specified file exists
+
+        Args:
+            train_dir_prefix (str): path to train directory
+            file_name (str): target file name
+            use_cloud (bool): Flag indicating whether to search google storage bucket or local
+
+        Returns:
+            A boolean indicating whether path exists
+        """
         source_path = self._get_train_dir(file_name=file_name, train_dir_prefix=train_dir_prefix)
         if use_cloud:
             return self.google_client.file_exists(source_path)
@@ -264,6 +297,17 @@ class DataHandler:
             return os.path.exists(source_path)
 
     def load_to_temp_file(self, file_name, train_dir_prefix = None, use_cloud=True):
+        """
+        Downloads file from Google Storage Bucket and saves to local storage
+
+        Args:
+            file_name (str): target file name
+            train_dir_prefix (str, optional): path to train directory
+            use_cloud (bool): Flag indicating whether to search google storage bucket or local
+
+        Returns:
+            str path to file save location
+        """
         source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
 
         if use_cloud:
@@ -277,6 +321,14 @@ class DataHandler:
             return source_path
 
     def load_from_stream(self, file_name, train_dir_prefix = None, use_cloud=True):
+        """
+        Download file as binary
+
+        Args:
+            file_name (str): target file name
+            train_dir_prefix(str, optional): path to train directory
+            use_cloud (bool): Flag indicating whether to search google storage bucket or local
+        """
         # load from training folder by default
         source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
 
@@ -288,6 +340,14 @@ class DataHandler:
                 return BytesIO(f.read())
 
     def load_text_as_list(self, file_name: str, train_dir_prefix = None, use_cloud=True):
+        """
+        Read the contents of a file and save them in a list
+
+        Args:
+            file_name (str): target file name
+            train_dir_prefix (str, optional): path to train directory
+            use_cloud (bool): Flag indicating whether to search google storage bucket or local
+        """
         # load from training folder by default
         source_path = self._get_train_dir(file_name, train_dir_prefix, use_cloud)
 
@@ -308,6 +368,17 @@ class DataHandler:
         return lines
 
     def load_torch_model(self, file_name, train_dir_prefix, device, use_cloud=True):
+        """
+        Loads a saved torch model
+
+        Args:
+            file_name (str): target file name, ex: model.pt
+            train_dir_prefix (str): path to train directory
+            use_cloud (bool): Flag indicating whether to search google storage bucket or local
+
+        Returns:
+            a torch model
+        """
         if use_cloud:
             model_stream = self.load_from_stream(file_name=file_name, train_dir_prefix=train_dir_prefix, use_cloud=True)
             return torch.load(model_stream, map_location=device)
@@ -315,6 +386,17 @@ class DataHandler:
             return torch.load(model_stream, map_location=device)
 
     def save_torch_model(self, file_name:str, model, train_dir_prefix = None):
+        """
+        Saves a torch model
+
+        Args:
+            file_name (str): target file name, ex: model.pt
+            model (torch.nn.Module): torch model to save
+            train_dir_prefix (str, optional): path to train directory
+
+        Returns:
+            None
+        """
 
         source_path = self.create_temp_file(file_name)
         torch.save(model, source_path)
@@ -326,7 +408,7 @@ class DataHandler:
 
         """
         Save a file from a source path to a destination directory.
-        
+
         Args:
             file_name (str): The name of the file to be saved.
             source_path (str): The path from which the file will be fetched.
@@ -347,7 +429,7 @@ class DataHandler:
     def save_text(self, file_name, data, train_dir_prefix = None, use_cloud=True):
         """
         Save a file from a source path to a destination directory.
-        
+
         Args:
             file_name (str): The name of the file to be saved.
             source_path (str): The path from which the file will be fetched.
@@ -365,6 +447,16 @@ class DataHandler:
                 file.write(data)
 
     def create_temp_file(self, file_path):
+        """
+        Create a temporary file in /tmp or %USERPROFILE%\AppData\Local\Temp
+        Note, lifespan of temprary files varies depending on OS.
+
+        Args:
+            file_path (str): path to save file
+
+        Returns:
+            str of saved file name
+        """
         # this will create a file in the commonly used temporary directory in Python
         # /tmp or %USERPROFILE%\AppData\Local\Temp in windows
         # Lifespan vary depending on os.
@@ -373,15 +465,35 @@ class DataHandler:
             return temp_file.name
 
     def _get_mri_dir(self, mri_type: MriType, dataset_type: Literal["train", "val", "test", None]=None):
+        """
+        Helper function to get folder path for MRI based on MriType and dataset type
+
+        Args:
+            mri_type (Mri_Type): The type of MRI data being read (e.g. annotated, autosegmented, reduced). Strictly use ENUM class for valid types
+            dataset_type (str, optional): The dataset folder (e.g train, val, test)
+
+        Returns:
+            str to corresponding MRI directory
+        """
         odrive_info = MRI_ONEDRIVE_INFO[mri_type.name]
         folder_name = odrive_info["fname"]
-        
+
         if dataset_type is not None:
             return os.path.join(self.data_dir, folder_name, dataset_type)
         else:
             return os.path.join(self.data_dir, folder_name)
-        
+
     def _download_from_onedrive(self, mri_type: MriType):
+        """
+        Helper function for downloading files from OneDrive.
+        Wrapper for OneDriveDownloader
+
+        Args:
+            mri_type (Mri_Type): The type of MRI data being read (e.g. annotated, autosegmented, reduced). Strictly use ENUM class for valid types
+
+        Returns:
+            None
+        """
         directory = self._get_mri_dir(mri_type=mri_type)
         zipname = directory + ".zip"
         if not os.path.exists(directory) or os.path.isdir(directory) is False:
@@ -389,18 +501,32 @@ class DataHandler:
             odrive_url = odrive_info['url']
             if 'unzip_path' in odrive_info:
                 # This is applicable to .zip files without subfolder
-                # Specifying an unzip path will prevent extracting the files onto the data_dir 
+                # Specifying an unzip path will prevent extracting the files onto the data_dir
                 unzip_path = os.path.join(self.data_dir, odrive_info['unzip_path'])
                 download(odrive_url, filename=zipname, unzip_path=unzip_path)
             else:
                 download(odrive_url, filename=zipname)
-                
-    def _get_mri_full_path(self, subj_id: str, mri_type: MriType, 
+
+    def _get_mri_full_path(self, subj_id: str, mri_type: MriType,
                        struct_scan: Union[StructuralScan, LatentVector, None]=None,
-                       file_no: int=None, local_path: str=None, 
+                       file_no: int=None, local_path: str=None,
                        dataset_type: Literal["train", "val", "test", None]=None):
-        
-        # this constructs the filepaths for all non-custom dataset/mri  
+        """
+        Helper function for getting full path to a specific MRI file based on MriType
+
+        Args:
+            subj_id (str): Unique subject identifier, Ex: `UPENN-GBM-00006`
+            mri_type (Mri_Type): The type of MRI data being read (e.g. annotated, autosegmented, reduced). Strictly use ENUM class for valid types
+            struct_scan (Struct_Scan): Enum type forloading structural scan (e.g T1, T2, T1GD, FLAIR). Strictly use ENUM class for valid structural scans
+            file_no (int): If loading 2d data, this is the slice number
+            local_path (str, optional): Local path to the dataset
+            dataset_type (str, optional): The dataset folder (e.g train, val, test)
+
+        Returns:
+            str representing full path to specified file
+        """
+
+        # this constructs the filepaths for all non-custom dataset/mri
         file_name = f"{subj_id}"
         if mri_type is not None:
             file_dir = self._get_mri_dir(mri_type=mri_type, dataset_type=dataset_type)
@@ -409,9 +535,9 @@ class DataHandler:
             # and will have consistent format
             assert local_path is not None
             assert file_no is not None
-            
+
             file_dir = local_path
-        
+
         # build file name and supply the file path based on current onedrive folder structure
         # the case of structural images is different since each subject has its own folder
         # note: for some unknown reason, comparing LSV MriType fails, so use .name attribute
@@ -451,8 +577,17 @@ class DataHandler:
         f_path = os.path.join(file_dir, file_name)
 
         return f_path
-    
+
     def _get_blob_extension(self, file_path):
+        """
+        Helper function to get file extension. Ex: MRI files end in `.nii.gz`
+
+        Args:
+            file_path (str): path to target file
+
+        Returns:
+            a str representing file extension type.
+        """
         suffix = os.path.splitext(file_path)
         if file_path.endswith(".nii.gz"):
             return ".nii.gz"
@@ -460,6 +595,17 @@ class DataHandler:
             return suffix[1]
 
     def _get_train_dir(self, file_name, train_dir_prefix = None, use_cloud = True):
+        """
+        Helper function to get train directory path
+
+        Args:
+            file_name (str): target file name
+            train_dir_prefix (str, optional): path to train directory
+            use_cloud (bool): Flag indicating whether to use google storage bucket or local
+
+        Returns:
+            A str representing path to train directory
+        """
         # default folder is train_dir_prefix
         if train_dir_prefix is None:
             train_dir_prefix = ""
@@ -469,8 +615,18 @@ class DataHandler:
             os.makedirs(train_dir, exist_ok=True)
 
         return train_dir
-        
+
     def _list_mri_recurse(self, startpath):
+        """
+        Helper function to list MRIs in a series of subdirectories
+        from a starting parent directory.
+
+        Args:
+            startpath (str): parent directory to start search
+
+        Returns:
+            A list of str containing file names
+        """
         file_paths = []
         for _, _, files in os.walk(startpath):
             for file_name in files:
