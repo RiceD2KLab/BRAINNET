@@ -17,6 +17,16 @@ from utils.data_handler import DataHandler, MriType
 from utils.maskformer_dataset import MaskformerMRIDataset, collate_fn
 
 def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
+    """
+    Converts post_process_semantic_segmentation to masks so format
+    is similar with maskformer input
+
+    Args:
+        segm_result (list): list of tensors output from MaskFormerInference.predict_segm
+
+    Returns:
+        tuple of numpy array and set
+    """
     # extracts prediction from post_process_semantic_segmentation result
     segments_info = segm_result['segments_info']
     segmentation = segm_result['segmentation'].cpu().numpy()
@@ -45,15 +55,37 @@ def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
     return pred_mask_labels, pred_class_labels
 
 class MaskFormerInference():
+    """
+    MaskFormerInference class defines an object for inference
+    using a trained MaskFormer model. Typical usage is to create
+    a separate instance for use with each train/val/test data sets.
+    """
 
     def __init__(self, data_handler: DataHandler,
                  data_dir: str,
-                 model: MaskFormerModel, 
-                 processor: MaskFormerImageProcessor, 
-                 upscaled_transform: Compose, scale_to_orig_size=True, 
-                 orig_transform: Compose=None, 
+                 model: MaskFormerModel,
+                 processor: MaskFormerImageProcessor,
+                 upscaled_transform: Compose, scale_to_orig_size=True,
+                 orig_transform: Compose=None,
                  orig_dim: tuple=None,
                  data_type: Literal["regular", "latent_space_vector"]="regular"):
+        """
+        Initializes a new MaskFormerInference object for predicting
+        segmentation masks using a trained MaskFormer model.
+
+        Args:
+            data_dir (str): path to data
+            model (MaskFormerModel): trained model
+            processor (MaskFormerImageProcessor): instance of MaskFormerImageProcessor used in processing input images
+            upscaled_transform (Compose): transform used in scaling and normalizing input data
+            scale_to_orig_size (bool): flag indicating whether output masks should be resized to original input dimensions
+            orig_transform (Compose): transform maintaining original dimensions and only normalizes
+            orig_dim (tuple): tuple of ints, expected shape (2,) defining shape of original input images
+            dataset_type (str, optional): The dataset folder (e.g train, val, test)
+
+        Returns:
+            None
+        """
 
         if scale_to_orig_size == True:
             assert orig_transform is not None, "provide orig_transform with unscaled image. otherwise, set 'scale_to_orig_size' param to false"
@@ -89,6 +121,15 @@ class MaskFormerInference():
         self.all_files = list(set([mri_common.get_mri_slice_file_name(file_name) for file_name in all_files_in_dir]))
 
     def get_patient_slices(self, subj: str):
+        """
+        Identifies all 2D slices for a given subject
+
+        Args:
+            subj (str): unique identifier, ex: UPENN-GBM-00006
+
+        Returns:
+            list of strings
+        """
         # if substring/subj is in the filename, include that file in the list of slices
         vol_list = [file_name for file_name in self.all_files if subj in file_name]
 
@@ -97,6 +138,17 @@ class MaskFormerInference():
         return vol_list_sorted
 
     def predict_segm(self, batch, batch_size=1):
+        """
+        Passes a batch of inputs through MaskFormer to get predicted
+        segmentation masks
+
+        Args:
+            batch (dictionary): collated dictionary of inputs for a given batch
+            batch_size (int): size of batch, default is 1 for a single sample
+
+        Returns:
+            tuple of model outputs and post-processed semantic segmentation masks
+        """
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
         self.model.eval()
@@ -106,6 +158,17 @@ class MaskFormerInference():
         return model_outputs, results
 
     def predict_patient_mask(self, subj_id: str, batch_size=10):
+        """
+        Pass all 2D images for a given subject through MaskFormer to
+        generate predicted segmentation masks
+
+        Args:
+            subj_id (str): unique subject identifier, ex: UPENN-GBM-00006
+            batch_size (int): number of 2D slices to process per batch, default = 10
+
+        Returns:
+            Tuple of 3D input volume, true segmentation mask, predicted segmentation mask, true labels, and predicted labels
+        """
 
         print("Performing inference on", subj_id)
 
@@ -217,6 +280,17 @@ class MaskFormerInference():
         return image_3d, mask_true_3d, mask_pred_3d, all_true_labels, all_pred_labels
 
     def _predict_segm(self, batch, batch_size=1):
+        """
+        Helper function to predict binary masks and apply post processing to
+        get the semantic segmentation mask.
+
+        Args:
+            batch (dict): collated dictionary of input samples
+            batch_size (int): number of 2D slices to process per batch, default = 10
+
+        Returns:
+            Tuple of model outputs and post-processed segmentation masks.
+        """
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         first_img =  batch["pixel_values"][0]
         target_size = transforms.ToPILImage()(first_img).size[::-1]
