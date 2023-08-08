@@ -159,7 +159,7 @@ class DataHandler:
         Read MRI data from the specified subject file.
 
         Args:
-            subj_file (str): The path or filename of the MRI subject file (eg. UPENN-GBM-00312)
+            subj_id (str): The unique subject identifier (eg. UPENN-GBM-00312)
             mri_type (Mri_Type): The type of MRI data being read (e.g. annotated, autosegmented, reduced). Strictly use ENUM class for valid types
             file_no (int): If loading 2d data, this is the slice number
             struct_scan (Struct_Scan): Enum type forloading structural scan (e.g T1, T2, T1GD, FLAIR). Strictly use ENUM class for valid structural scans
