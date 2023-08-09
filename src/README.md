@@ -3,29 +3,49 @@
 This readme explains our source code structure. The tree looks like:
 
 ```
-src/
 ├── auth
 │   ├── README.md
 │   └── zinc-citron-387817-2cbfd8289ed2.json
 ├── models
-│   └── autoencoder.py
+│   ├── autoencoder.py
+│   └── __pycache__
+│       └── autoencoder.cpython-310.pyc
 ├── notebooks
 │   ├── 00_exploratory_data_analysis.ipynb
 │   ├── 01_mri_data_prep_and_loading.ipynb
 │   ├── 02_auto_segm_versus_segm.ipynb
-│   ├── 03_prototype_conv_autoencoder.ipynb
+│   ├── 03a_prototype_conv_autoencoder.ipynb
+│   ├── 03b_latent_space_representation_data_prep_for_maskformer.ipynb
 │   ├── 04_cnn_cancer_classifier.ipynb
-│   └── 05_maskformer_pilot_share_metrics.ipynb
+│   ├── 05_maskformer_pilot_share_metrics.ipynb
+│   └── 06_maskformer_pilot_share_metrics_using_latent_space_vectors.ipynb
 ├── README.md
+├── training
 ├── utils
 │   ├── data_handler.py
-│   ├── get_python_requirements.ipynb
+│   ├── get_python_requirements
+│   │   ├── get_python_requirements.ipynb
+│   │   └── pyenv_import_all_reqs.ipynb
 │   ├── google_storage.py
 │   ├── make_autoencoder_dataset.py
+│   ├── maskformer_dataset.py
+│   ├── maskformer_evaluation.py
+│   ├── maskformer_inference.py
+│   ├── maskformer_utils.py
 │   ├── metrics.py
 │   ├── mri_common.py
 │   ├── mri_plotter.py
-│   └── pyenv_import_all_reqs.ipynb
+│   └── __pycache__
+│       ├── data_handler.cpython-310.pyc
+│       ├── google_storage.cpython-310.pyc
+│       ├── make_autoencoder_dataset.cpython-310.pyc
+│       ├── maskformer_dataset.cpython-310.pyc
+│       ├── maskformer_evaluation.cpython-310.pyc
+│       ├── maskformer_inference.cpython-310.pyc
+│       ├── maskformer_utils.cpython-310.pyc
+│       ├── metrics.cpython-310.pyc
+│       ├── mri_common.cpython-310.pyc
+│       └── mri_plotter.cpython-310.pyc
 └── visualization
     ├── MRI_visualization.ipynb
     ├── README.md
