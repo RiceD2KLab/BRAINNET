@@ -41,7 +41,7 @@ class SliceDirection(str, Enum):
     DEPTH = "DEPTH"
     CROSS_SIDE = "CROSS_SIDE"
     CROSS_FRONT = "CROSS_FRONT"
-    
+
 def get_mri_subj_id(file_name):
     """
     Given a file name of an MRI 3D volume, extract
@@ -226,7 +226,7 @@ def collate_scans(subject_list, shape, struct_scan_list, scan_type='struct', dat
             scan_path = os.path.join(data_path, f"{subj_file}_{struct_scan}.nii.gz")
             if scan_type == 'struct':
                 scan_path = os.path.join(data_path, f"{subj_file}_11_{struct_scan}_cut.nii.gz")
-            
+
             scan = nib.load(scan_path).get_fdata()
             # insert the scan image array data
             collated_images[idx1, idx2, :, :, :] = scan[:, :, :]
@@ -274,7 +274,7 @@ def get_data_stats(subject_list, struct_scan_list, scan_type='struct', data_path
             scan_path = os.path.join(data_path, f"{subj_file}_{struct_scan}.nii.gz")
             if scan_type == 'struct':
                 scan_path = os.path.join(data_path, f"{subj_file}_11_{struct_scan}_cut.nii.gz")
-            
+
             scan = nib.load(scan_path).get_fdata()
             # measure stats
             scan_mean = scan.mean()
@@ -444,7 +444,7 @@ def normalize_and_save(subjects_list, struct_scan_list, data_dir, output_dir, tr
             scan_path = os.path.join(data_dir, f"{subj_file}_{struct_scan}.nii.gz")
             if scan_type == 'struct':
                 scan_path = os.path.join(data_dir, f"{subj_file}_11_{struct_scan}_cut.nii.gz")
-            
+
             scan = nib.load(scan_path)
             scan_fdata = scan.get_fdata()
 
@@ -518,7 +518,7 @@ def copy_segm_files(norm_dir, segm_dir, subjects_list, train_list, val_list, tes
         # UPENN-GBM-XXXXX_11_segm.nii.gz
         segm_split_name = segm.split('_')
         segm_name = f"{segm_split_name[0]}_11_segm.nii.gz"
-        
+
         # specify the output directory
         subdir = get_subdir(
             subj,
@@ -535,14 +535,25 @@ def copy_segm_files(norm_dir, segm_dir, subjects_list, train_list, val_list, tes
                 shutil.copyfileobj(input_file, output_file)
 
 def get_zero_reduction_dimensions(mri_dir: str, subj_list:List[str], struct_scan_list:List[str]):
-    
+    """
+    Given input data, determines new dimensions by clipping out voxels that are entirely zero
+
+    Args:
+        mri_dir (str): path to data
+        subj_list (list): list of subject ids, as strings
+        struct_scan_list (list): names of input scan types, as strings
+
+    Returns:
+        tuple of ints representing indices for clipping cube boundaries
+    """
+
     # note: this preprocessing assumes that the folder structure is in fixed in this format
     # mri_dir/UPENN-GBM-00001_11/UPENN-GBM-00001_11_FLAIR.nii.gz
-    
+
     # load flair image and use its shape to store zero data information
     subj_file = subj_list[0]
     file_name = f"{subj_file}_11_FLAIR.nii.gz"
-    
+
     file_path = os.path.join(mri_dir, f"{subj_file}_11", file_name)
     img_data = nib.load(file_path).get_fdata()
     n0 = img_data.shape[0]
@@ -591,7 +602,7 @@ def get_zero_reduction_dimensions(mri_dir: str, subj_list:List[str], struct_scan
         a1_max_idx = np.max( (a1_max_idx, np.where(~a1_empty)[0].max()) )
         a2_min_idx = np.min( (a2_min_idx, np.where(~a2_empty)[0].min()) )
         a2_max_idx = np.max( (a2_max_idx, np.where(~a2_empty)[0].max()) )
-    
+
     print("min idx in height is:",a0_min_idx,"max idx in height is:",a0_max_idx)
     print("min idx in width is :",a1_min_idx,"max idx in width is :",a1_max_idx)
     print("min idx in depth is :",a2_min_idx,"max idx in depth is :",a2_max_idx)
@@ -613,11 +624,25 @@ def get_zero_reduction_dimensions(mri_dir: str, subj_list:List[str], struct_scan
         a2_min_idx,
         a2_max_idx
     )
-    
+
 # create a new folder, save all reduced data into the new folder
 def reduce_data(new_dim:  Tuple[int, int, int, int, int, int],
-                subj_list: List[str], struct_scans: List[str], 
+                subj_list: List[str], struct_scans: List[str],
                 struct_scan_dir: str, segm_dir:str, output_dir:str):
+    """
+    Crops cubes to reduced dimensions to eliminate non-zero voxels
+
+    Args:
+        new_dim (tuple): new dimensions, output by get_zero_reduction_dimensions()
+        subj_list (list): list of unique subject ids, as strings
+        struct_scans (list): list of scan types, as strings
+        struct_scan_dir (str): path to structural scan volumes
+        segm_dir (str): path to segmentation volumes
+        output_dir (str): path to save dimensionally-cropped data
+
+    Returns:
+        None.
+    """
 
     (a0_min_idx, a0_max_idx,
      a1_min_idx, a1_max_idx,
@@ -627,7 +652,7 @@ def reduce_data(new_dim:  Tuple[int, int, int, int, int, int],
         os.makedirs(output_dir)
 
     sliced_nifti = None
-    
+
     for idx in range(len(subj_list)):
 
         subj_file = subj_list[idx]
@@ -638,7 +663,7 @@ def reduce_data(new_dim:  Tuple[int, int, int, int, int, int],
             file_name = f"{subj_file}_11_{struct_scan}.nii.gz"
             file_path = os.path.join(struct_scan_dir, f"{subj_file}_11", file_name)
             nifti = nib.load(file_path)
-            
+
             # reduce data
             sliced_data = nifti.get_fdata()[a0_min_idx:a0_max_idx, a1_min_idx:a1_max_idx, a2_min_idx:a2_max_idx]
             sliced_nifti = nib.Nifti1Image(sliced_data, nifti.affine, nifti.header)
@@ -660,13 +685,13 @@ def reduce_data(new_dim:  Tuple[int, int, int, int, int, int],
         # save reduced data
         output_file = os.path.join(output_dir, f"{subj_file}_11_segm_cut.nii.gz")
         nib.save(sliced_nifti, output_file)
-        
+
     # print dimensions of last image
     n_h = sliced_data.shape[0]
     n_w = sliced_data.shape[1]
     n_d = sliced_data.shape[2]
     print('Dimension of Image are height:',n_h,'width:',n_w,'depth:',n_d)
-    
+
 def generate_2d_slices(input_dir: str = None, output_dir: str = None, orientation: SliceDirection = None):
     """
     Extracts 2d slices from a loaded 3D volumes in the specified orientation
@@ -675,7 +700,7 @@ def generate_2d_slices(input_dir: str = None, output_dir: str = None, orientatio
 
     Returns None.
     """
-    
+
     # specify directory paths
     direction = orientation.name.lower()
     output_train_dir = os.path.join(output_dir, "train", direction)
@@ -697,46 +722,46 @@ def generate_2d_slices(input_dir: str = None, output_dir: str = None, orientatio
     # using the function, we can expect the following structure:
     # e.g. latent_space_vectors_annot_reduced_norm/train
     # images_annot_reduced_norm/train
-    
+
     loaded_3d_mri_dir_train = os.path.join(input_dir, "train")
     loaded_3d_mri_dir_val = os.path.join(input_dir, "val")
     loaded_3d_mri_dir_test = os.path.join(input_dir, "test")
     print("loaded_3d_mri_dir_train", loaded_3d_mri_dir_train)
     print("loaded_3d_mri_dir_val", loaded_3d_mri_dir_val)
     print("loaded_3d_mri_dir_test", loaded_3d_mri_dir_test)
-    
+
     # iterate over train/val/test dirs and extract 2d slices
     input_dir_list = [loaded_3d_mri_dir_train, loaded_3d_mri_dir_val, loaded_3d_mri_dir_test]
     output_dir_list = [output_train_dir, output_val_dir, output_test_dir]
     print('Extracting 2D slices from 3D volumes (now is a good time to take 5 min coffee break ...)')
-    
+
     for in_subdir, out_subdir in tqdm(zip(input_dir_list, output_dir_list), total=len(input_dir_list)):
         print(f"Working on {in_subdir} --> {out_subdir}")
-        
+
         _extract_2d_slices(
             orientation=orientation,
             input_dir=in_subdir,
             output_dir=out_subdir
         )
-    
+
     return output_dir_list
-    
+
 def _extract_2d_slices(input_dir: str, output_dir: str, orientation: SliceDirection):
     """
     helper function to generate_2d_slices
     """
     # get a listing of files in the input directory
     dir_list = os.listdir(input_dir)
-    
+
     # call _process_volume to create slices in parallel for each file
     with ProcessPoolExecutor() as executor:
-        list(tqdm(executor.map(_process_volume, 
+        list(tqdm(executor.map(_process_volume,
                             dir_list,
-                            [input_dir]*len(dir_list), 
-                            [output_dir]*len(dir_list), 
+                            [input_dir]*len(dir_list),
+                            [output_dir]*len(dir_list),
                             [orientation]*len(dir_list)),
                     total=len(dir_list)))
-        
+
 def _process_volume(infile, input_dir, output_dir, orientation):
     """
     helper function called to generate 2d slices for 1 volume/1 patient
@@ -756,7 +781,7 @@ def _process_volume(infile, input_dir, output_dir, orientation):
         for idx in range(n_depth):
             sliced_data = nifti.get_fdata()[:, :, idx]
             _process_slice(idx, sliced_data, affine, header, infile, output_dir)
-            
+
     elif orientation == SliceDirection.CROSS_SIDE:
         for idx in range(n_height):
             sliced_data = nifti.get_fdata()[idx, :, :]
@@ -773,7 +798,7 @@ def _process_slice(idx, sliced_data, affine, header, infile, output_dir):
     """
     # convert numpy array to Nifti1Image format
     sliced_nifti = nib.Nifti1Image(sliced_data, affine, header)
-    
+
     # save image
     save_fn = f"{infile.split('.nii.gz')[0]}_{idx}.nii.gz"
     nib.save(sliced_nifti, os.path.join(output_dir, save_fn))
