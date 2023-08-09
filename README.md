@@ -22,12 +22,17 @@ BioCV_Su23/
 ├── fitted_models
 │   └── autoencoder
 ├── img
+│   ├── autoencoder
 │   └── general
 └── src
     ├── auth
     ├── models
+    │   └── __pycache__
     ├── notebooks
+    ├── training
     ├── utils
+    │   ├── get_python_requirements
+    │   └── __pycache__
     └── visualization
 ```
 
