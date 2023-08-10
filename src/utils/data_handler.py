@@ -181,7 +181,7 @@ class DataHandler:
             # return nifti.get_fdata() only
             return data
 
-    def list_mri_in_dir(self, mri_type: [MriType, None]=None, sort: bool=True, local_path: str=None,
+    def list_mri_in_dir(self, mri_type: Union[MriType, None]=None, sort: bool=True, local_path: str=None,
                         return_dir=False, dataset_type: Literal["train", "val", "test", None]=None,
                         orientation: Literal["depth", "cross_front", "cross_side", None]=None):
         """
