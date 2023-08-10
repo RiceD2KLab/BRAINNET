@@ -29,14 +29,14 @@ SEGMENT_COLORS = {
     3: "yellow"
 }
 
-# Map BRATS mask annotation names to data mask annotation labels
-BRATS_REGIONS = {
-    "ELSE": [0],
-    "WT": [1, 2, 3], # ET + NT + ED
-    "TC": [1, 3], # ET + necrotic tumor
-    "ET": [3]
+# Map total slices for each slice direction
+SLICE_TOTAL = {
+    "DEPTH": 146,
+    "CROSS_SIDE": 163,
+    "CROSS_FRONT": 193
 }
 
+# Enum class for slice direction
 class SliceDirection(str, Enum):
     DEPTH = "DEPTH"
     CROSS_SIDE = "CROSS_SIDE"

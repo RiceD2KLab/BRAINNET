@@ -1,19 +1,19 @@
-# All functions used for inferencing
+''' All functions used for inferencing'''
 
 import numpy as np
 import torch
 import torchvision.transforms as transforms
 
+from albumentations import Compose
 from torch.utils.data import DataLoader
 from transformers import (MaskFormerImageProcessor, MaskFormerModel)
 from typing import List, Literal
-from albumentations import Compose
 
 # local imports
 import utils.maskformer_utils as mf_utils
 import utils.mri_common as mri_common
 
-from utils.data_handler import DataHandler, MriType
+from utils.data_handler import DataHandler
 from utils.maskformer_dataset import MaskformerMRIDataset, collate_fn
 
 def get_mask_from_segm_result(segm_result: List[torch.Tensor]):
@@ -61,8 +61,7 @@ class MaskFormerInference():
     a separate instance for use with each train/val/test data sets.
     """
 
-    def __init__(self, data_handler: DataHandler,
-                 data_dir: str,
+    def __init__(self, data_dir: str,
                  model: MaskFormerModel,
                  processor: MaskFormerImageProcessor,
                  upscaled_transform: Compose, scale_to_orig_size=True,
@@ -92,7 +91,7 @@ class MaskFormerInference():
             assert orig_dim is not None, "provide tuple for with the original dimension of the image. otherwise, set 'scale_to_orig_size' param to false"
 
         self.model = model
-        self.data_handler = data_handler
+        self.data_handler = DataHandler()
         self.processor = processor
         self.scale_to_orig_size = scale_to_orig_size
 
@@ -106,7 +105,7 @@ class MaskFormerInference():
         self.orig_dim = orig_dim
 
         # specify the data type
-        # "regular" = T1, T1GD, FLAIR
+        # "regular" = T1, T1GD, FLAIR, T2
         # "latent_space_vector" are latent space vectors
         self.data_type = data_type
 
@@ -116,7 +115,7 @@ class MaskFormerInference():
         # UPENN-GBM-00006_11_FLAIR_1.nii.gz, UPENN-GBM-00006_11_T1_1.nii.gz, UPENN-GBM-00006_11_FLAIR_2.nii.gz...
         all_files_in_dir = self.data_handler.list_mri_in_dir(local_path=self.data_dir)
 
-        # Just re-write to a format that the Maskformer DataLoader wants
+        # Re-write files to a format that the Maskformer DataLoader wants
         # UPENN-GBM-00040_122.nii.gz, UPENN-GBM-00073_20.nii.gz, UPENN-GBM-00016_139.nii.gz
         self.all_files = list(set([mri_common.get_mri_slice_file_name(file_name) for file_name in all_files_in_dir]))
 
@@ -179,8 +178,7 @@ class MaskFormerInference():
         batch_size = batch_size
 
         # dataloader for upscaled dataset
-        dataset_upscaled = MaskformerMRIDataset(data_handler=self.data_handler,
-                                       data_dir=self.data_dir,
+        dataset_upscaled = MaskformerMRIDataset(data_dir=self.data_dir,
                                        data_list=data_list,
                                        processor=self.processor,
                                        data_type=self.data_type,
@@ -194,8 +192,7 @@ class MaskFormerInference():
         # dataloader for dataset with original size
         dataloader_orig = None
         if self.scale_to_orig_size:
-            dataset_orig = MaskformerMRIDataset(data_handler=self.data_handler,
-                                        data_dir=self.data_dir,
+            dataset_orig = MaskformerMRIDataset(data_dir=self.data_dir,
                                         data_list=data_list,
                                         processor=self.processor,
                                         data_type=self.data_type,
@@ -253,7 +250,7 @@ class MaskFormerInference():
                         # e.g. if only 2 segments are predicted, the shape is (2, height, width)
                         pred_mask = pred_mask_labels[mask_idx, :, :]
 
-                        # meanwhile, the shape of mask_pred_3d is fixed with the total number of segments as initialized above
+                        # meanwhile, the shape of mask_pred_3d is fixed with the total number of segments: 4
                         # we can use the predicted label to determine which channel to save the mask into
                         mask_pred_3d[pred_label, slice_idx, :, :] = pred_mask
 

@@ -4,15 +4,17 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from typing import List
 
 # local imports
 import utils.mri_common as mri_common
+
+from utils.mri_common import SliceDirection
 from utils.mri_plotter import MRIPlotter
 mri_plt = MRIPlotter()
 
 ADE_MEAN = np.array([123.675, 116.280, 103.530]) / 255
 ADE_STD = np.array([58.395, 57.120, 57.375]) / 255
+
 
 def scale_mask(mask):
     """
@@ -85,32 +87,6 @@ def denormalize_img(img_data):
     denormalized_image = np.moveaxis(denormalized_image, 0, -1)
     return denormalized_image
 
-def to_brats_mask(mask_3d):
-    """
-    Converts mask labels from [NCR, ET, ED, ELSE] to
-    [TC, WT, ET] for comparison with BRATS challenge reported metrics
-
-    Args:
-        mask_3d (torch.Tensor or numpy.ndarray): input mask with segmentation labels as ints
-
-    Returns:
-        torch.Tensor or numpy.ndarray
-    """
-    # assumed shape:  (4, 146, 512, 512)
-    # init brats mask
-    brats_mask_shape = list(mask_3d.shape)
-    brats_mask_shape[0] = len(mri_common.BRATS_REGIONS)
-    brats_mask =  np.zeros(tuple(brats_mask_shape), dtype=np.uint8)
-
-    for brats_region_idx, region_mapping in enumerate(mri_common.BRATS_REGIONS.items()):
-        prev_brats_region = brats_mask[brats_region_idx, :, :, :]
-        for sub_region in region_mapping[1]:
-            sub_region_mask = mask_3d[sub_region, :, :, :]
-            prev_brats_region = np.logical_or(prev_brats_region, sub_region_mask)
-
-        brats_mask[brats_region_idx, :, :, :] = prev_brats_region
-    return brats_mask
-
 def mask_to_segmentation(mask_labels, class_labels):
     """
     Flattens mask labels with shape (n_label, width, height) to a
@@ -151,6 +127,38 @@ def post_proc_result_to_segmentation(results):
     pred_mask_to_segm = np.vectorize(pred_mask_mapping.get)(results['segmentation'])
     return pred_mask_to_segm
 
+def get_label_dictionary(segments):
+    """
+    Generate mappings between segment IDs and labels for MaskFormer.
+
+    Args:
+        segments (dict): Dictionary of segment IDs and corresponding labels.
+
+    Returns:
+        tuple: Two dictionaries:
+               - id2label (dict): Segment ID to label mapping.
+               - label2id (dict): Label to segment ID mapping.
+    """
+    id2label = segments.copy()
+
+    label2id = {}
+    for key, value in id2label.items():
+        label2id[value] = key
+        
+    return id2label, label2id
+
+def get_file_idx_bounds(orientation:SliceDirection, num_slice=None):
+    n_total = mri_common.SLICE_TOTAL[orientation.name]
+    if num_slice is None:
+        return 0, n_total + 1
+    else:
+        lower_bound = num_slice // 2
+        upper_bound = num_slice - lower_bound
+        
+        file_no_min = (n_total//2) - lower_bound
+        file_no_max = (n_total//2) + upper_bound
+        return file_no_min, file_no_max
+        
 def get_subj_ids(subj_files):
     """
     Compiles a list of unique subject id numbers
@@ -383,3 +391,4 @@ def _extract_numeric_part(filename):
         numeric_part = int(parts[1].split('.')[0])
         return prefix, numeric_part
     return filename, -1  # Return the original filename if the format is not as expected
+

@@ -43,8 +43,7 @@ def collate_fn(batch):
 class MaskformerMRIDataset(Dataset):
     """Image segmentation dataset."""
 
-    def __init__(self, 
-                 data_handler: DataHandler, 
+    def __init__(self,  
                  data_list: List[str], 
                  data_dir: str,
                  processor: MaskFormerImageProcessor,
@@ -77,7 +76,7 @@ class MaskformerMRIDataset(Dataset):
             self.channel_3 = LatentVector.LATENT_VECTOR_3
 
         # use the Data Handler class to handle all sorts of image loading
-        self.data_handler = data_handler
+        self.data_handler = DataHandler()
 
         # expected format: UPENN-GBM-00008_53.nii.gz, UPENN-GBM-00008_54.nii.gz, UPENN-GBM-00008_55.nii.gz
         self.data_list = data_list.copy()
@@ -107,11 +106,7 @@ class MaskformerMRIDataset(Dataset):
 
         subj_no = item.split('.')[0].split('_')[0]
         file_no = item.split('.')[0].split('_')[1]
-        # print("Subj no", subj_no)
-        # print("File no", file_no)
-        # load data file to image and instance_seg
-        # return nifti=True to return format before converting to numpy get_fdata
-
+        
         # load channel 1
         data_cur, data_cur_nifti = self.data_handler.load_mri(
             subj_id=subj_no,
@@ -128,7 +123,6 @@ class MaskformerMRIDataset(Dataset):
 
         # convert data range from [0 1] to [0 255]
         image[:,:,0] = data_cur * 255
-        # print("image mean, max=",image[:,:,0].mean(), image[:,:,0].max())
 
         # load channel 2
         data_cur = self.data_handler.load_mri(
@@ -157,14 +151,13 @@ class MaskformerMRIDataset(Dataset):
         )
         instance_seg =  np.zeros( (n_h, n_w), dtype=np.uint8)
         instance_seg[:,:] = data_cur
-        # print(instance_seg.max())
+        
         # currently set mapping manually
         mapping_dict = {}
         mapping_dict[0] = 0
         mapping_dict[1] = 1
         mapping_dict[2] = 2
         mapping_dict[4] = 3
-        # mapping_dict[4] = 4
 
         # Use NumPy's vectorize() function to apply the mapping function to each element in the original array
         class_id_map = np.vectorize(lambda x: mapping_dict[x])(instance_seg)
@@ -178,8 +171,10 @@ class MaskformerMRIDataset(Dataset):
         # apply data augmentation
         if self.augment is True:
 
-            # # Image Color Jittering
+            # Image Color Jittering
             pil_image = Image.fromarray(image.astype(np.uint8))
+            
+            # tf
             # color_jitter = torchvision.transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
             # pil_image = color_jitter(pil_image)
 
@@ -231,50 +226,21 @@ class MaskformerMRIDataset(Dataset):
                     instance_seg = instance_seg[:,int(dim1[1]*(1-factor1)*0.5):int(dim1[1]*(1+factor1)*0.5), \
                                                   int(dim1[2]*(1-factor1)*0.5):int(dim1[2]*(1+factor1)*0.5)]
 
-            #change back to ndarray
+            # change back to ndarray
             image = image.numpy()
             instance_seg = instance_seg.numpy()
             instance_seg = instance_seg[0,:,:]
 
             # convert to H, W, C (transform requires this)
             image = image.transpose(1,2,0)
-            # print("image mean, min, max=",image[:,:,0].mean(), image[:,:,0].min(), image[:,:,0].max())
-
-            # # remove labels not in the transformed segmentation map
-            # inst_remove = {}
-            # for instance in inst2class.keys():
-            #     if not np.any(np.isin(instance_seg, instance)):
-            #         inst_remove[instance] = 0
-            # inst2class_new = {k: v for k, v in inst2class.items() if k not in inst_remove}
-            # inst2class.update(inst2class_new)
-
-            # # handle possible instance 0 that is created in transform
-            # if instance_seg.min() == 0 and 0 not in inst2class:
-            #     inst2class[0] = 0
-
-            # print("inst2class after transform  :", inst2class)
-            # print("instance_seg after transform:", np.unique(instance_seg))
 
         # apply input transforms, including resize (after cropping)
         if self.transform:
             transformed = self.transform(image=image, mask=instance_seg)
-            # print("image mean, min, max=",image[:,:,0].mean(), image[:,:,0].min(), image[:,:,0].max())
-            # print("instance_seg mean, min, max=",instance_seg[:,:].mean(), instance_seg[:,:].min(), instance_seg[:,:].max())
 
             image, instance_seg = transformed['image'], transformed['mask']
-            # print("image mean, min, max=",image[:,:,0].mean(), image[:,:,0].min(), image[:,:,0].max())
-            # print("instance_seg mean, min, max=",instance_seg[:,:].mean(), instance_seg[:,:].min(), instance_seg[:,:].max())
 
         # Prepare data to fit Maskformer input
-        # if class_labels.shape[0] == 1 and class_labels[0] == 0:
-        #     # Some image does not have annotation (all ignored)
-        #     inputs = self.processor([image], return_tensors="pt")
-        #     inputs = {k:v.squeeze() for k,v in inputs.items()}
-        #     inputs["class_labels"] = torch.tensor([0])
-        #     inputs["mask_labels"] = torch.zeros((0, inputs["pixel_values"].shape[-2], inputs["pixel_values"].shape[-1]))
-        # else:
-        #     inputs = self.processor([image], [instance_seg], instance_id_to_semantic_id=inst2class, return_tensors="pt")
-        #     inputs = {k: v.squeeze() if isinstance(v, torch.Tensor) else v[0] for k,v in inputs.items()}
         inputs = self.processor([image], [instance_seg], instance_id_to_semantic_id=inst2class, return_tensors="pt")
         inputs = {k: v.squeeze() if isinstance(v, torch.Tensor) else v[0] for k,v in inputs.items()}
 
