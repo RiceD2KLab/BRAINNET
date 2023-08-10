@@ -535,7 +535,7 @@ class DataHandler:
         elif mri_type == MriType.ANNOTATED_REDUCED:
             file_name = f"{file_name}_11_segm_cut"
 
-        elif mri_type == MriType.ANNOTATED_REDUCED_NORM:
+        elif mri_type == MriType.ANNOTATED_REDUCED_NORM or mri_type == MriType.LATENT_SPACE_VECTORS_NORM:
             if struct_scan is not None:
                 file_name = f"{file_name}_11_{struct_scan}"
             else:
