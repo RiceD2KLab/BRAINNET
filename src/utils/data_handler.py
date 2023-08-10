@@ -201,7 +201,7 @@ class DataHandler:
         if mri_type is not None:
             
             # get associated mri directory
-            if MriType.ANNOTATED_REDUCED_NORM_2D:        
+            if mri_type == MriType.ANNOTATED_REDUCED_NORM_2D:        
                 assert dataset_type is not None, "Specify if train, val or test"
                 assert orientation is not None, "Specify if depth, cross_side or cross_front"
 
