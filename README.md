@@ -130,6 +130,7 @@ libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-d
 
 1. Update pip: `$ pip install pip update`
 1. With the virtual environment active: `$ pip install -r requirements.txt`
+1. Install transformers: `$ pip install git+https://github.com/huggingface/transformers.git`
 
 *Note*: This will take a few minutes.
 
@@ -162,6 +163,7 @@ From this point forward, all steps are completed in a terminal. If you are worki
 #### Step 4: Install required packages
 
 1. `$ pip install -r requirements.txt`
+1. Install transformers: `$ pip install git+https://github.com/huggingface/transformers.git`
 
 *Note*: This will take some time.
 
