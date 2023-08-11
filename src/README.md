@@ -9,7 +9,6 @@ This readme explains our source code structure. The tree looks like:
 ├── models
 │   ├── autoencoder.py
 │   └── __pycache__
-│       └── autoencoder.cpython-310.pyc
 ├── notebooks
 │   ├── 00_exploratory_data_analysis.ipynb
 │   ├── 01_mri_data_prep_and_loading.ipynb
@@ -17,8 +16,8 @@ This readme explains our source code structure. The tree looks like:
 │   ├── 03a_prototype_conv_autoencoder.ipynb
 │   ├── 03b_latent_space_representation_data_prep_for_maskformer.ipynb
 │   ├── 04_cnn_cancer_classifier.ipynb
-│   ├── 05_maskformer_pilot_share_metrics.ipynb
-│   └── 06_maskformer_pilot_share_metrics_using_latent_space_vectors.ipynb
+│   ├── 05_maskformer_segmentation.ipynb
+│   └── 06_maskformer_segmentation_using_latent_space_vectors.ipynb
 ├── README.md
 ├── training
 ├── utils
@@ -31,21 +30,12 @@ This readme explains our source code structure. The tree looks like:
 │   ├── maskformer_dataset.py
 │   ├── maskformer_evaluation.py
 │   ├── maskformer_inference.py
+│   ├── maskformer_train.py
 │   ├── maskformer_utils.py
 │   ├── metrics.py
 │   ├── mri_common.py
 │   ├── mri_plotter.py
 │   └── __pycache__
-│       ├── data_handler.cpython-310.pyc
-│       ├── google_storage.cpython-310.pyc
-│       ├── make_autoencoder_dataset.cpython-310.pyc
-│       ├── maskformer_dataset.cpython-310.pyc
-│       ├── maskformer_evaluation.cpython-310.pyc
-│       ├── maskformer_inference.cpython-310.pyc
-│       ├── maskformer_utils.cpython-310.pyc
-│       ├── metrics.cpython-310.pyc
-│       ├── mri_common.cpython-310.pyc
-│       └── mri_plotter.cpython-310.pyc
 └── visualization
     ├── MRI_visualization.ipynb
     ├── README.md
