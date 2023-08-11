@@ -44,7 +44,18 @@ class MaskFormerTrain():
         self.data_handler = DataHandler()
         
     def train(self, train_dataloader, val_dataloader, train_id, train_dir_prefix, optimizer=None, scheduler=None):
-                        
+        """
+        MaskFormer train function
+
+        Inputs:
+            train_dataloader - the dataloader for the training dataset
+            val_dataloader - the dataloader for the validation dataset
+            train_id - unique identifier for the run. this will be appended to the files saved during training
+            train_dir_prefix - specifies the folder to store the models into within the google storage training folder 
+            optimizer - custom optimizer for the training
+            scheduler - custom learning rate scheduler
+        """
+        
         liveloss = PlotLosses()
 
         batch_max = 100000
