@@ -19,6 +19,17 @@ Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
 ```
 BioCV_Su23/
 ├── data
+│   └── demo
+│       └── 00_upenn_gbm_data_raw
+│           ├── images_segm
+│           └── images_structural
+│               ├── UPENN-GBM-00002_11
+│               ├── UPENN-GBM-00006_11
+│               ├── UPENN-GBM-00008_11
+│               ├── UPENN-GBM-00009_11
+│               ├── UPENN-GBM-00011_11
+│               ├── UPENN-GBM-00075_11
+│               └── UPENN-GBM-00093_11
 ├── fitted_models
 │   └── autoencoder
 ├── img
@@ -29,14 +40,13 @@ BioCV_Su23/
     ├── models
     │   └── __pycache__
     ├── notebooks
-    ├── training
     ├── utils
     │   ├── get_python_requirements
     │   └── __pycache__
     └── visualization
 ```
 
-* `data/` directory containing instructions to retrieve the dataset
+* `data/` directory containing instructions to retrieve the dataset, as well as a small demo datset
 * `img/` directory for saving images used in analyses, presentations, and reports
 * `fitted_models/` directory containing fitted model weights for re-use
 * `src/` directory contains all source code
