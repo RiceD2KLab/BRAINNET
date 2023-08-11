@@ -12,12 +12,11 @@ This readme explains our source code structure. The tree looks like:
 ├── notebooks
 │   ├── 00_exploratory_data_analysis.ipynb
 │   ├── 01_mri_data_prep_and_loading.ipynb
-│   ├── 02_auto_segm_versus_segm.ipynb
-│   ├── 03a_prototype_conv_autoencoder.ipynb
-│   ├── 03b_latent_space_representation_data_prep_for_maskformer.ipynb
-│   ├── 04_cnn_cancer_classifier.ipynb
-│   ├── 05_maskformer_segmentation.ipynb
-│   └── 06_maskformer_segmentation_using_latent_space_vectors.ipynb
+│   ├── 02a_prototype_conv_autoencoder.ipynb
+│   ├── 02b_latent_space_representation_data_prep_for_maskformer.ipynb
+│   ├── 03_cnn_cancer_classifier.ipynb
+│   ├── 04_maskformer_segmentation.ipynb
+│   └── 05_maskformer_segmentation_using_latent_space_vectors.ipynb
 ├── README.md
 ├── training
 ├── utils
