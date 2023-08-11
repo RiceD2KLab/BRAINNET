@@ -173,14 +173,15 @@ When you are done working, remember to deactivate to base: `$ conda deactivate`
 
 ## Running the software
 
-As of July 12, 2023, the main modules of our software are contained across multiple jupyter notebooks located under `BioCV_Su23/src/notebooks/`. With future releases, we intend to migrate these prototyping notebooks to a Python app. For specific details about the notebooks, please see the source [README](src/README.md).
+As of August 11, 2023, our software APIs usage and data science pipeline is documented in the Jupyter notebook `demo_notebook.ipynb`. This notebook is intended to demonstrate how to use our software for end-to-end training and evaulation. Note that we have placed a small subsample of data under `data/demo_data` for use with this notebook. The results shown in `demo_notebook.ipynb` are not representative of our final products and are meant for demonstration
+purposes, only. Within `src/` we have a directory `notebooks` which contains individual notebooks that run our entire pipeline on the entire data set and capture our current results. For specific details about these notebooks, please see the source [README](src/README.md).
 
 We have utilized [Google Colab's](colab.research.google.com/) resources for prototyping our models. If you do not have stand alone hardware with a minimum of 26 GB system RAM and a dedicated GPU with a minimum of 16 GB of vRAM, we recommend you do likewise. We have written custom modules located within `src/` and to be able to use them, the entire git repository needs to be cloned to a Google drive. The easiest way to do this is:
 
 1. Clone the repository locally
 1. Upload the repository to your Google drive
 
-Once you have cloned the repository onto your Google drive, open your drive and navigate to any of the Jupyter notebooks located under `src/notebooks/` and open it to launch it in Colab. Having opened Colab, there are a series of steps that are followed in each notebook (except `01_mri_data_prep_and_loading.ipynb` and `04_cnn_cancer_classifier.ipynb`):
+Once you have cloned the repository onto your Google drive, open your drive and open the `demo_notebook.ipynb` notebook to launch it in Colab. If you chose to run in Colab as opposed to a local environment, you will need to first mount your google drive so that our APIs are accessible: 
 
 1. Mount the Goolge drive to the Colab runtime. You should have a Google log-in pop-up window asking you whether to give Colab access to your drive. Accept. Note that the Colab runtime is mounted at `/content`. Mounting the Google drive to the Colab runtime will place your drive at `/content/drive/My Drive/`.
 1. Set the working directory to `/content/drive/My Drive/BioCV_Su23/src`
