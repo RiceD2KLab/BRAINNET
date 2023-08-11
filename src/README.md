@@ -83,7 +83,15 @@ This directory contains much of our custom Python (`.py`) modules that we have w
 
 ### `data_handler.py`
 
-This module ...
+This module handles all functions related to MRI and training data management such as saving, downloading and reading.
+
+#### File Storage Locations
+
+Our data files are stored in the following locations:
+
+- **OneDrive**: [Link to OneDrive Folder](https://rice-my.sharepoint.com/:f:/r/personal/hl9_rice_edu/Documents/capstone%20project/GBM%20dataset/final_dataset?csf=1&web=1&e=GaE0He)
+  
+- **Google Storage**: Bucket Name: `rice_d2k_biocv`
 
 ### `google_storage.py`
 
