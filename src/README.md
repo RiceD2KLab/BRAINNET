@@ -62,21 +62,21 @@ This is our initial notebook where we explore the MRI data for the first time, e
 
 This notebook performs various data wrangling steps that prepares 2D slices from the 3D MRI volumes.
 
-### `02_auto_segm_versus_segm.ipynb`
-
-This notebook explores the relation between the expert reviewed annotation masks with those that were generated using the BrATS 2021 challenge-winning models as a performance baseline.
-
-### `03_prototype_conv_autoencoder.ipynb`
+### `02_prototype_conv_autoencoder.ipynb`
 
 This notebook tests training our 4-to-3 compressional 3D Convolutional Autoencoder and utilizes custom code from `utils/` and `models/`.
 
-### `04_cnn_cancer_classifier.ipynb`
+### `03_cnn_cancer_classifier.ipynb`
 
 This notebook tests fine-tuning VGG19 for classification of 2D slices (cancer negative or cancer positive) and GradCAM for explainability.
 
-### `05_maskformer_pilot_share_metrics.ipynb`
+### `04_maskformer_segmentation.ipynb`
 
 This notebook tests fine-tuning Meta's MaskFormer Vision Transformer model for segmentation, calculating metrics on the results.
+
+### `05_maskformer_segmentation_using_latent_space_vectors.ipynb`
+
+This notebook tests fine-tuning Meta's MaskFormer Vision Transformer model for segmentation using features generated from the 3D Convolutional Autoencoder.
 
 ## `src/utils`
 
@@ -92,11 +92,31 @@ This module defines the class `GStorageClient` that is used to access our data h
 
 ### `make_autoencoder_dataset.py`
 
-This modules defines:
+This module defines:
 
 * function `create_ae_data_list` which generates a lit of unique patient sample IDs,
 * class `AutoencoderMRIDataset` which inherits the `Dataset` class from `torch.utils.data`, implementing a custom `__getitem__` method for accessing data on-demand during batch training, and
 * class `ToTensor` which converts the data stored as `numpy` array format (w, h, d, c) to tensor format (c, w, h, d) as expected by `torch`.
+  
+### `maskformer_dataset.py`
+
+This module defines the `MaskformerMRIDataset` class for MaskFormer.
+
+### `maskformer_evaluation.py`
+
+This module defines functions used for evaluating our models' performance across different datasets.
+
+### `maskformer_inference.py`
+
+This module contains helper functions for MaskFormer inference for semantic segmentation.
+
+### `maskformer_train.py`
+
+This module contains helper functions for MaskFormer training.
+
+### `maskformer_utils.py`
+
+This modules defines common helper functions used accross all MaskFormer modules.
 
 ### `metrics.py`
 
