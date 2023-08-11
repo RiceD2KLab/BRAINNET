@@ -4,14 +4,31 @@ import matplotlib.patches as mpatches
 import numpy as np
 import utils.mri_common as mri
 from PIL import Image
-
+from matplotlib.font_manager import FontProperties
 
 class MRIPlotter:
+    """
+    Class containing methods for plotting MRI scans and segmentation masks.
 
+    Intialization is done by instantiating an MRIPlotter object:
+
+    mri_plotter = MRIPlotter()
+
+    All access is through plotting methods.
+    """
+    
     def set_axis_config(self, axs_element):
+        """
+        Helper function to set default fontsizes
+
+        Inputs:
+            axs_element - matplotlib.pyplot.axes object
+
+        Returns None.
+        """
         axs_element.tick_params(axis='x', labelsize=18)
         axs_element.tick_params(axis='y', labelsize=18)
-        axs_element.title.set_fontsize(18)
+        axs_element.title.set_fontsize(24)
         axs_element.yaxis.label.set_size(18)
         axs_element.xaxis.label.set_size(18)
 
@@ -39,10 +56,13 @@ class MRIPlotter:
         if colorbar:
             fig.colorbar(img, ax=axs_element, fraction=0.05)
 
+        # call common config to set size of titles/labels
         self.set_axis_config(axs_element)
-
-        axs_element.set_xlabel("pixels")
-        axs_element.set_ylabel("pixels")
+        
+        # turn off scale for plotting mri 
+        # other plots can still use common config if they have scale
+        axs_element.xaxis.set_visible(False)
+        axs_element.yaxis.set_visible(False)
 
         return img
 
@@ -146,11 +166,25 @@ class MRIPlotter:
             handles = []
             for idx, color in enumerate(segment_colors):
                 handles.append(mpatches.Patch(color=color, label=segment_names[idx]))
-
+            
             handle_loc = loc if not None else 'lower right'
             axs_element.legend(handles=handles, loc=handle_loc)
 
     def plot_masks(self, masks, fig, axs, row, col, title, legends, **kwargs):
+        """
+        Adds annotation masks to a given matplotlib figure and axes
+
+        Inputs:
+            masks - numpy ndarray of annotation masks
+            fig - matplotlib.pyplot.figure object
+            axs - matplotlib.pyplot.axes object
+            row - int, number of rows in the axs
+            col - int, number of columns in the axs
+            title - str, figure title
+            legends - list of strings
+            **kwargs - keyword arguments to capture other parameters that can be passed to imshow (e.g. alpha, aspect, etc.)
+        Returns None.
+        """
         colors = ["red", "green"]
         axs_element = self._get_subplot_axs(fig, axs, row, col)
         for mask_idx, mask in enumerate(masks):
@@ -167,8 +201,18 @@ class MRIPlotter:
             handles.append(mpatches.Patch(color=color, label=legends[idx]))
 
         axs_element.legend(handles=handles, loc='upper left')
-
+        
     def _get_default_alpha(self, img_data):
+        """
+        Helper function for getting the default transparency mask
+        Values that are zero will be fully transparent and
+        all else will have an alpha blending transparency of 0.5 (50%)
+
+        Inputs:
+            img_data - Nifti image, or numpy ndarray
+
+        Returns numpy ndarray or None.
+        """
         if isinstance(img_data, Image.Image):
             return np.where(np.array(img_data) <= 0, 0, 0.5)
         elif isinstance(img_data, np.ndarray):
@@ -177,6 +221,18 @@ class MRIPlotter:
             return None
 
     def _get_subplot_axs(self, fig, axs, row, col):
+        """
+        Helper function to access specified subplot in a
+        matplotlib.pyplot.axes object
+
+        Inputs:
+            fig - matplotlib.pyplot.figure object
+            axs - matplotlib.pyplot.axes object
+            row - int, specified row in subplot to access
+            col - int, specified col in subplot to access
+
+        Returns matplotlib.pyplot.axes object at specified subplot location
+        """
         if len(fig.axes) > 1:
             if len(axs.shape) == 1:
                 # if axis has subplot but with 1 row
@@ -188,6 +244,14 @@ class MRIPlotter:
             return axs
 
     def _is_image_3d(self, img_data):
+        """
+        Helper function to determine whether the image is 3D
+
+        Inputs:
+            img_data, numpy ndarray, or other
+
+        Returns an int or a bool
+        """
         if isinstance(img_data, np.ndarray):
             return img_data.ndim == 3
         return False

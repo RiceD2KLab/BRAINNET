@@ -1,6 +1,6 @@
 data/
 **/__pycache__/
 !src/auth/readme.txt
-src/training/*
 .python-version
 .venv/
+src/temp_files/*
