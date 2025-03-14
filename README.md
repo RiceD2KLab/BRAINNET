@@ -1,9 +1,9 @@
-# Rice D2K DSCI 535 Capstone Summer 2023, TeamCV Biomedical Imaging
+# BRAINNET
 
 ![Project Splash Image](/img/general/project_splash_img.png)
 
 ## Team Members
-Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Zida Wang
+Huafeng Liu, Ben Dowdell, Todd Engelder, Nicolas Oso, Keith Pulmano, Arko Barman
 
 ## Contents
 
