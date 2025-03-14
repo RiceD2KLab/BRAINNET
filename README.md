@@ -1,5 +1,7 @@
 # BRAINNET
 
+Please cite our paper: "Glioblastoma Tumor Segmentation using an Ensemble of Vision Transformers" (https://arxiv.org/abs/2312.11467) if you are using our code base.
+
 ![Project Splash Image](/img/general/project_splash_img.png)
 
 ## Team Members
